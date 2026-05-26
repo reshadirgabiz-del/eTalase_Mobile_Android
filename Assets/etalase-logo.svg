@@ -1,0 +1,11 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 580 160" fill="none">
+  <title>e-talase</title>
+  <desc>Bracketed [e] dot talase wordmark</desc>
+  <text x="45" y="110" font-family="&#39;Instrument Serif&#39;, &#39;Times New Roman&#39;, serif" font-size="120" letter-spacing="-2" fill="#1c1a14">
+    <tspan fill="#5d6b40" font-weight="300">[</tspan>
+    <tspan fill="#5d6b40" font-style="italic">e</tspan>
+    <tspan fill="#5d6b40" font-weight="300">]</tspan>
+  </text>
+  <circle cx="248" cy="80" r="8" fill="#5d6b40"></circle>
+  <text x="270" y="115" font-family="&#39;Instrument Serif&#39;, &#39;Times New Roman&#39;, serif" font-size="120" letter-spacing="-2" fill="#1c1a14">talase</text>
+</svg>

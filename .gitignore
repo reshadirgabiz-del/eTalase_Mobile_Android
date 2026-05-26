@@ -1,13 +1,39 @@
+# Sub-repos — each is its own git repository, not tracked here
+Backend/
+Frontend/
+Mobile/
+
+# Dependencies
 node_modules/
+
+# Build output
+dist/
 .next/
 out/
 *.tsbuildinfo
 
+# Environment variables — never commit these
 .env
 .env.local
 .env.*.local
 
+# Expo / Mobile
+Mobile/.expo/
+Mobile/android/
+Mobile/ios/
+
+# Editor / OS
 .DS_Store
 .vscode/
 .idea/
 *.swp
+
+# Logs
+*.log
+npm-debug.log*
+
+# Supabase local
+supabase/.temp/
+
+# Archives
+*.zip
