@@ -30,8 +30,30 @@ export class OrdersController {
     @Query('status') status?: string,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
+    @Query('archived') archived?: string,
   ) {
-    return this.ordersService.list(userId, storeId, +page, +limit, status);
+    const archivedBool = archived === 'true' ? true : archived === 'false' ? false : undefined;
+    return this.ordersService.list(userId, storeId, +page, +limit, status, archivedBool);
+  }
+
+  @Patch(':id/archive')
+  @UseGuards(ClerkAuthGuard)
+  archive(
+    @Param('id') id: string,
+    @CurrentUser() userId: string,
+    @Query('storeId') storeId: string,
+  ) {
+    return this.ordersService.archive(id, userId, storeId);
+  }
+
+  @Patch(':id/unarchive')
+  @UseGuards(ClerkAuthGuard)
+  unarchive(
+    @Param('id') id: string,
+    @CurrentUser() userId: string,
+    @Query('storeId') storeId: string,
+  ) {
+    return this.ordersService.unarchive(id, userId, storeId);
   }
 
   @Get(':id')

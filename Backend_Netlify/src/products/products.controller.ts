@@ -39,8 +39,30 @@ export class ProductsController {
     @Query('storeId') storeId: string,
     @Query('page') page = '1',
     @Query('limit') limit = '20',
+    @Query('archived') archived?: string,
   ) {
-    return this.productsService.listAll(userId, storeId, +page, +limit);
+    const archivedBool = archived === 'true' ? true : archived === 'false' ? false : undefined;
+    return this.productsService.listAll(userId, storeId, +page, +limit, archivedBool);
+  }
+
+  @Patch(':id/archive')
+  @UseGuards(ClerkAuthGuard)
+  archive(
+    @Param('id') id: string,
+    @CurrentUser() userId: string,
+    @Query('storeId') storeId: string,
+  ) {
+    return this.productsService.archive(id, userId, storeId);
+  }
+
+  @Patch(':id/unarchive')
+  @UseGuards(ClerkAuthGuard)
+  unarchive(
+    @Param('id') id: string,
+    @CurrentUser() userId: string,
+    @Query('storeId') storeId: string,
+  ) {
+    return this.productsService.unarchive(id, userId, storeId);
   }
 
   @Get('import/template')

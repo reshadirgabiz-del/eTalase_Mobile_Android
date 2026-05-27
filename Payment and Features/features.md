@@ -40,11 +40,24 @@ This document lists features that the Jastip Platform has, unreleased, and under
 - Promo code on checkout: customers enter one or more promo codes at the checkout payment step for discounts on the total, product subtotal, or delivery fee (% or absolute). Merchants create and manage codes at `/dashboard/[storeId]/promo-codes` (owner and admin only; web only). Each code supports: product scope (all or specific products), expiry date (default: unlimited), max usage count (default: unlimited). Usage is recorded in `order_promo_codes` and tracked via `totalSaved` and `currentUsages` per code. When the total reaches 0 (fully covered by discount), the order is marked `paid` immediately with no Midtrans redirect.
   - Backend: `POST /promo-codes`, `GET /promo-codes`, `GET /promo-codes/:id`, `PATCH /promo-codes/:id`, `DELETE /promo-codes/:id` (auth, owner/admin), `POST /promo-codes/validate` (public) in new `PromoCodesModule`. `CreateOrderDto` extended with optional `promoCodes: string[]`.
   - DB migration: `supabase/migrations/20260526_add_promo_codes.sql` — adds `promo_codes`, `order_promo_codes` tables, and `promo_discount` column to `orders`.
-
-## Features under development
 - Allow payment with direct transfer, as an alternative to Midtrans. The merchant can put in (1) Text; (2) Bank details, i.e. No. Rek, Nama penerima, Nama bank; (3) Once a transfer made, customer can upload proof of transfer and notify the merchant via chat (e.g., WhatsApp). The platform notify merchant via mobile notification; (4) The proof of transfer will be attached to the order item, order status need to be confirmed by admin/owner. The mobile notification has confirm/ignore option to quickly confirm the payment; (5) Once confirmed, the status will change to "Paid"
 - Promo code usage is tracked in the order item. Opening the order will show merchant which promo being used in the order.
-- Connect order item to the shipment status. Add a button in the order that opens a modal in dashboard regarding shipment tracking.
+- Allow merchant to make a flat-rate delivery.
+- On the storefront, add a button to open a modal called "About the merchant" (Tentang kami). This will give the logo of the merchant, description, address, and contacts. In the settings, also allow merchant to add links to social media. These links will show up in the About the merchant modal for the customer to contact the merchant.
+- For pages that is reserved for members (like purchase a plan), redirect the user to sign-in page when he/she has not been logged-in. When login succeed, redirect to the page he/she originally wants to open.
+- Allow payment in different currencies. Currency is set in Settings → Pembayaran tab. Non-IDR disables Midtrans and auto-enables bank transfer. Currency display is now consistent across the dashboard (orders, products, overview, promo-codes, order-links), storefront, and mobile app.
+  - Dashboard: `StoreRoleContext` now carries `currency`; layout fetches it from public settings. All price-formatting calls use `formatPrice(amount, currency)`.
+  - Mobile: `appStore` now persists `currency`; fetched from `/settings/public` on store select; `formatPrice` added to `lib/api.ts`.
+  - DB migration: `supabase/migrations/20260530_new_settings_fields.sql` — already covers `currency` column in `settings`.
+- Notification preferences (email & push per topic): each user can independently enable/disable push notifications per topic (order_status, low_stock, bank_transfer_proof). Email prefs work the same way. Preferences are per-user per-store.
+  - Backend: `GET /notifications/preferences?storeId=X` and `PATCH /notifications/preferences` in `NotificationsController`. Push/email dispatch respects per-user topic preferences.
+  - Dashboard Settings: new **Notifikasi** tab (4th tab in the tabbed settings page) with push+email switches per topic.
+  - Mobile: new **Notifikasi Push** card on the Profile screen with per-topic toggles.
+  - DB migration: `supabase/migrations/20260527_notification_preferences.sql` — creates `notification_preferences` table.
+- Settings page grouped with tabs: Dashboard settings page now has 4 tabs — **Toko** (info + social links), **Pembayaran** (currency, Midtrans, bank transfer), **Pengiriman** (flat rate, origin address, couriers), **Notifikasi**. The sidebar navbar shows a ToC sub-list when on the settings page (Toko / Pembayaran / Pengiriman / Notifikasi) as anchor links using `?tab=` query params.
+
+## Features under development
+<!-- (none currently) -->
 
 ## Feature ideas (not yet scoped)
 - Order link analytics: track how many times a link was opened and converted to a completed order, surfaced in the dashboard.

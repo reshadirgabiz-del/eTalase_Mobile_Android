@@ -22,6 +22,7 @@ function serializeOrder(row: any) {
   return {
     id: row.id,
     status: row.status,
+    isArchived: row.is_archived ?? false,
     subtotal: row.subtotal,
     deliveryFee: row.delivery_price,
     total: row.total,
@@ -193,13 +194,14 @@ export class OrdersService {
     return { ...serializeOrder(order), midtransToken: transaction.token, midtransRedirectUrl: transaction.redirect_url };
   }
 
-  async list(userId: string, storeId: string, page: number, limit: number, status?: string) {
+  async list(userId: string, storeId: string, page: number, limit: number, status?: string, archived?: boolean) {
     if (!await this.stores.getUserRole(storeId, userId)) throw new ForbiddenException();
     const from = (page - 1) * limit;
     let query = this.supabase.client
       .from('orders')
       .select('*, order_items(*)', { count: 'exact' })
       .eq('store_id', storeId)
+      .eq('is_archived', archived ?? false)
       .order('updated_at', { ascending: false });
 
     if (status) query = query.eq('status', status);
@@ -207,6 +209,34 @@ export class OrdersService {
     const { data, count, error } = await query.range(from, from + limit - 1);
     if (error) throw new Error(error.message);
     return { data: (data ?? []).map(serializeOrder), total: count, page, limit };
+  }
+
+  async archive(id: string, userId: string, storeId: string) {
+    const role = await this.stores.getUserRole(storeId, userId);
+    if (!role || role === 'delivery') throw new ForbiddenException();
+    const { data, error } = await this.supabase.client
+      .from('orders')
+      .update({ is_archived: true })
+      .eq('id', id)
+      .eq('store_id', storeId)
+      .select()
+      .single();
+    if (error || !data) throw new NotFoundException('Order not found');
+    return serializeOrder(data);
+  }
+
+  async unarchive(id: string, userId: string, storeId: string) {
+    const role = await this.stores.getUserRole(storeId, userId);
+    if (!role || role === 'delivery') throw new ForbiddenException();
+    const { data, error } = await this.supabase.client
+      .from('orders')
+      .update({ is_archived: false })
+      .eq('id', id)
+      .eq('store_id', storeId)
+      .select()
+      .single();
+    if (error || !data) throw new NotFoundException('Order not found');
+    return serializeOrder(data);
   }
 
   async getOne(id: string, userId: string, storeId: string) {

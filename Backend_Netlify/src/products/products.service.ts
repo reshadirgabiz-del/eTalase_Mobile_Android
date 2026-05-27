@@ -15,6 +15,7 @@ function serializeProduct(row: any) {
     stock: row.stock ?? 0,
     tags: row.tags ?? [],
     isActive: row.is_active ?? false,
+    isArchived: row.is_archived ?? false,
     weightGrams: row.weight_grams ?? 500,
     createdAt: row.created_at ?? '',
     updatedAt: row.updated_at ?? '',
@@ -36,6 +37,7 @@ export class ProductsService {
       .select('*', { count: 'exact' })
       .eq('store_id', storeId)
       .eq('is_active', true)
+      .eq('is_archived', false)
       .order('name', { ascending: true })
       .range(from, from + limit - 1);
 
@@ -49,18 +51,45 @@ export class ProductsService {
     return { data: products, total: count, page, limit };
   }
 
-  async listAll(userId: string, storeId: string, page: number, limit: number) {
+  async listAll(userId: string, storeId: string, page: number, limit: number, archived?: boolean) {
     if (!await this.stores.getUserRole(storeId, userId)) throw new ForbiddenException();
     const from = (page - 1) * limit;
     const { data, count, error } = await this.supabase.client
       .from('products')
       .select('*', { count: 'exact' })
       .eq('store_id', storeId)
+      .eq('is_archived', archived ?? false)
       .order('name', { ascending: true })
       .range(from, from + limit - 1);
 
     if (error) throw new Error(error.message);
     return { data: (data ?? []).map(serializeProduct), total: count, page, limit };
+  }
+
+  async archive(id: string, userId: string, storeId: string) {
+    if (!await this.stores.getUserRole(storeId, userId)) throw new ForbiddenException();
+    const { data, error } = await this.supabase.client
+      .from('products')
+      .update({ is_archived: true })
+      .eq('id', id)
+      .eq('store_id', storeId)
+      .select()
+      .single();
+    if (error || !data) throw new NotFoundException('Product not found');
+    return serializeProduct(data);
+  }
+
+  async unarchive(id: string, userId: string, storeId: string) {
+    if (!await this.stores.getUserRole(storeId, userId)) throw new ForbiddenException();
+    const { data, error } = await this.supabase.client
+      .from('products')
+      .update({ is_archived: false })
+      .eq('id', id)
+      .eq('store_id', storeId)
+      .select()
+      .single();
+    if (error || !data) throw new NotFoundException('Product not found');
+    return serializeProduct(data);
   }
 
   async getOne(id: string) {
