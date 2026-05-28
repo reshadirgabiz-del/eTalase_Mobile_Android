@@ -63,22 +63,99 @@ export class SubscriptionsService {
     return data?.plan ?? null;
   }
 
-  async checkout(plan: string, userId: string) {
+  async validateVoucher(code: string): Promise<{ code: string; discountType: string; discountValue: number }> {
+    const { data: voucher } = await this.supabase.client
+      .from('plan_vouchers')
+      .select('*')
+      .ilike('code', code.trim())
+      .eq('is_active', true)
+      .maybeSingle();
+
+    if (!voucher) {
+      throw new HttpException('Kode voucher tidak valid', HttpStatus.BAD_REQUEST);
+    }
+    if (voucher.expires_at && new Date(voucher.expires_at) < new Date()) {
+      throw new HttpException('Kode voucher sudah kedaluwarsa', HttpStatus.BAD_REQUEST);
+    }
+    if (voucher.max_usages !== null && voucher.current_usages >= voucher.max_usages) {
+      throw new HttpException('Kode voucher sudah habis digunakan', HttpStatus.BAD_REQUEST);
+    }
+
+    return {
+      code: voucher.code,
+      discountType: voucher.discount_type,
+      discountValue: Number(voucher.discount_value),
+    };
+  }
+
+  async checkout(plan: string, userId: string, voucherCode?: string) {
     if (process.env.MIDTRANS_MOCK_MODE === 'true') {
       return this.activateMockStarter(userId);
     }
 
-    const price = PLAN_PRICES[plan];
+    let finalPrice = PLAN_PRICES[plan];
+    let voucherId: string | null = null;
+
+    if (voucherCode?.trim()) {
+      const { data: voucher } = await this.supabase.client
+        .from('plan_vouchers')
+        .select('*')
+        .ilike('code', voucherCode.trim())
+        .eq('is_active', true)
+        .maybeSingle();
+
+      if (!voucher) {
+        throw new HttpException('Kode voucher tidak valid', HttpStatus.BAD_REQUEST);
+      }
+      if (voucher.expires_at && new Date(voucher.expires_at) < new Date()) {
+        throw new HttpException('Kode voucher sudah kedaluwarsa', HttpStatus.BAD_REQUEST);
+      }
+      if (voucher.max_usages !== null && voucher.current_usages >= voucher.max_usages) {
+        throw new HttpException('Kode voucher sudah habis digunakan', HttpStatus.BAD_REQUEST);
+      }
+
+      voucherId = voucher.id;
+      const discountValue = Number(voucher.discount_value);
+      if (voucher.discount_type === 'percent') {
+        finalPrice = Math.round(finalPrice * (1 - discountValue / 100));
+      } else {
+        finalPrice = Math.max(0, finalPrice - discountValue);
+      }
+
+      await this.supabase.client
+        .from('plan_vouchers')
+        .update({ current_usages: voucher.current_usages + 1 })
+        .eq('id', voucherId);
+    }
+
+    // Free after voucher — activate directly without Midtrans
+    if (finalPrice === 0) {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 30);
+      await this.supabase.client
+        .from('subscriptions')
+        .update({ status: 'cancelled' })
+        .eq('user_id', userId)
+        .eq('status', 'active');
+      await this.supabase.client.from('subscriptions').insert({
+        user_id: userId,
+        plan,
+        status: 'active',
+        expires_at: expiresAt.toISOString(),
+      });
+      return { token: 'mock-activated', redirectUrl: '' };
+    }
+
     const orderId = `SUB-${Date.now()}-${userId.slice(-8)}`;
     const planInfo = PLAN_DISPLAY[plan];
 
     const transaction = await this.snap.createTransaction({
-      transaction_details: { order_id: orderId, gross_amount: price },
+      transaction_details: { order_id: orderId, gross_amount: finalPrice },
       item_details: [
         {
           id: plan,
           name: `Jastip Platform - ${planInfo.displayName} (30 hari)`,
-          price,
+          price: finalPrice,
           quantity: 1,
         },
       ],

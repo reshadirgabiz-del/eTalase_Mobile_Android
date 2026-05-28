@@ -1,5 +1,5 @@
 import {
-  Controller, Get, Post, Body, UseGuards, HttpCode, HttpStatus,
+  Controller, Get, Post, Body, Param, UseGuards, HttpCode, HttpStatus,
 } from '@nestjs/common';
 import { SubscriptionsService } from './subscriptions.service';
 import { CheckoutSubscriptionDto } from './dto/checkout-subscription.dto';
@@ -21,10 +21,15 @@ export class SubscriptionsController {
     return this.subscriptions.getMySubscription(userId);
   }
 
+  @Get('voucher/:code')
+  validateVoucher(@Param('code') code: string) {
+    return this.subscriptions.validateVoucher(code);
+  }
+
   @Post('checkout')
   @UseGuards(ClerkAuthGuard)
   checkout(@Body() dto: CheckoutSubscriptionDto, @CurrentUser() userId: string) {
-    return this.subscriptions.checkout(dto.plan, userId);
+    return this.subscriptions.checkout(dto.plan, userId, dto.voucherCode);
   }
 
   @Post('webhook')
