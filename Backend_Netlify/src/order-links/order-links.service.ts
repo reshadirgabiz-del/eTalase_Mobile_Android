@@ -32,6 +32,8 @@ export class OrderLinksService {
 
     if (dto.isPermanent) {
       await this.subscriptions.checkPermanentLinkLimit(userId, storeId);
+    } else {
+      await this.subscriptions.checkTemporaryLinkLimit(userId, storeId);
     }
 
     const expiresAt = dto.isPermanent

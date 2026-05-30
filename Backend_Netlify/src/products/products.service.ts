@@ -9,8 +9,10 @@ function serializeProduct(row: any) {
   return {
     id: row.id,
     name: row.name,
+    subtitle: row.subtitle ?? null,
     description: row.description ?? '',
     price: row.price,
+    discountedPrice: row.discounted_price != null ? Number(row.discounted_price) : null,
     imageUrl: row.image_url ?? '',
     stock: row.stock ?? 0,
     tags: row.tags ?? [],
@@ -112,8 +114,10 @@ export class ProductsService {
       .insert({
         store_id: storeId,
         name: dto.name,
+        subtitle: dto.subtitle ?? null,
         description: dto.description,
         price: dto.price,
+        discounted_price: dto.discountedPrice ?? null,
         image_url: dto.imageUrl,
         stock: dto.stock,
         tags,
@@ -132,8 +136,10 @@ export class ProductsService {
       .from('products')
       .update({
         ...(dto.name !== undefined && { name: dto.name }),
+        ...(dto.subtitle !== undefined && { subtitle: dto.subtitle || null }),
         ...(dto.description !== undefined && { description: dto.description }),
         ...(dto.price !== undefined && { price: dto.price }),
+        ...('discountedPrice' in dto && { discounted_price: dto.discountedPrice ?? null }),
         ...(dto.imageUrl !== undefined && { image_url: dto.imageUrl }),
         ...(dto.stock !== undefined && { stock: dto.stock }),
         ...(dto.tags !== undefined && { tags: dto.tags.map((t) => t.toLowerCase().trim()).filter(Boolean) }),

@@ -6,13 +6,19 @@ export interface PlanLimits {
   maxStores: number | null;
   maxProductsPerStore: number | null;
   maxMembersPerStore: number | null;
+  maxTemporaryOrderLinks: number | null;
   maxPermanentOrderLinks: number | null;
+  maxPromoCodes: number | null;
+  transactionFeeIdr: number;
   hasCategorization: boolean;
   hasStorefrontCustomization: boolean;
   hasApiAccess: boolean;
   hasOrderLinks: boolean;
   hasOrderLinkMessage: boolean;
   hasProductImport: boolean;
+  hasMultiProductPromo: boolean;
+  hasMobileApp: boolean;
+  hasNotifications: boolean;
 }
 
 export interface PlanDiscount {
@@ -34,7 +40,10 @@ export interface PlanDisplay {
   limits: PlanLimits;
 }
 
-function effectivePrice(priceIdr: number | null, discountPercent?: number): number | null {
+function effectivePrice(
+  priceIdr: number | null,
+  discountPercent?: number,
+): number | null {
   if (priceIdr === null) return null;
   if (!discountPercent) return priceIdr;
   return Math.round(priceIdr * (1 - discountPercent / 100));
@@ -47,13 +56,19 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = Object.fromEntries(
       maxStores: p.maxStores,
       maxProductsPerStore: p.maxProductsPerStore,
       maxMembersPerStore: p.maxMembersPerStore,
+      maxTemporaryOrderLinks: p.maxTemporaryOrderLinks,
       maxPermanentOrderLinks: p.maxPermanentOrderLinks,
+      maxPromoCodes: p.maxPromoCodes,
+      transactionFeeIdr: p.transactionFeeIdr,
       hasCategorization: p.hasCategorization,
       hasStorefrontCustomization: p.hasStorefrontCustomization,
       hasApiAccess: p.hasApiAccess,
       hasOrderLinks: p.hasOrderLinks,
       hasOrderLinkMessage: p.hasOrderLinkMessage,
       hasProductImport: p.hasProductImport,
+      hasMultiProductPromo: p.hasMultiProductPromo,
+      hasMobileApp: p.hasMobileApp,
+      hasNotifications: p.hasNotifications,
     } satisfies PlanLimits,
   ]),
 );
@@ -62,7 +77,10 @@ export const PLAN_LIMITS: Record<string, PlanLimits> = Object.fromEntries(
 export const PLAN_PRICES: Record<string, number> = Object.fromEntries(
   Object.entries(PLANS_CONFIG)
     .filter(([, p]) => p.priceIdr !== null)
-    .map(([name, p]) => [name, effectivePrice(p.priceIdr, p.discount?.percent)!]),
+    .map(([name, p]) => [
+      name,
+      effectivePrice(p.priceIdr, p.discount?.percent)!,
+    ]),
 );
 
 export const PLAN_DISPLAY: Record<string, PlanDisplay> = Object.fromEntries(

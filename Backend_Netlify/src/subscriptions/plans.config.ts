@@ -18,6 +18,8 @@
 //   3. The frontend reads plan data from the API at runtime — changes appear
 //      automatically on next page load. No frontend restart needed.
 //
+//   OR use the admin page (/admin/plans) to edit live without restarting.
+//
 // =============================================================================
 // DISCOUNTS
 // =============================================================================
@@ -59,10 +61,12 @@ export interface PlanDiscount {
 
 export interface PlanEntry {
   // ─── Pricing ───────────────────────────────────────────────────────────────
-  /** Base price in IDR. Set null for contact-us plans (Enterprise). */
+  /** Base price in IDR. 0 for free plans. Set null for contact-us plans (Enterprise). */
   priceIdr: number | null;
   /** Active discount. Set null to show full price. */
   discount: PlanDiscount | null;
+  /** Per-transaction admin fee in IDR. 0 = no fee. */
+  transactionFeeIdr: number;
 
   // ─── Limits ────────────────────────────────────────────────────────────────
   /** Max number of stores the owner can create. null = unlimited. */
@@ -71,8 +75,12 @@ export interface PlanEntry {
   maxProductsPerStore: number | null;
   /** Max total store members including the owner. null = unlimited. */
   maxMembersPerStore: number | null;
+  /** Max active temporary (2-hour) order links per store. null = unlimited. */
+  maxTemporaryOrderLinks: number | null;
   /** Max permanent (non-expiring) order links per store. 0 = disabled. null = unlimited. */
   maxPermanentOrderLinks: number | null;
+  /** Max active promo codes per store. null = unlimited. */
+  maxPromoCodes: number | null;
 
   // ─── Feature flags ─────────────────────────────────────────────────────────
   /** Product tags / categorization on the storefront. */
@@ -87,6 +95,12 @@ export interface PlanEntry {
   hasOrderLinkMessage: boolean;
   /** Bulk product import via Excel template. */
   hasProductImport: boolean;
+  /** Whether a promo code can target more than one specific product at once. */
+  hasMultiProductPromo: boolean;
+  /** Whether the user can log in and use the mobile app. */
+  hasMobileApp: boolean;
+  /** Whether push & email notifications are sent for this plan. */
+  hasNotifications: boolean;
 
   // ─── Display ───────────────────────────────────────────────────────────────
   displayName: string;
@@ -104,17 +118,19 @@ export interface PlanEntry {
 // =============================================================================
 
 export const PLANS_CONFIG: Record<string, PlanEntry> = {
-
-  starter: {
+  free: {
     // ── Pricing ──────────────────────────────────────────────────────────────
-    priceIdr: 150_000,
+    priceIdr: 0,
     discount: null,
+    transactionFeeIdr: 1000,
 
     // ── Limits ───────────────────────────────────────────────────────────────
     maxStores: 1,
-    maxProductsPerStore: 10,
-    maxMembersPerStore: 2,
+    maxProductsPerStore: 5,
+    maxMembersPerStore: 1,
+    maxTemporaryOrderLinks: 10,
     maxPermanentOrderLinks: 0,
+    maxPromoCodes: 3,
 
     // ── Features ─────────────────────────────────────────────────────────────
     hasCategorization: false,
@@ -122,19 +138,64 @@ export const PLANS_CONFIG: Record<string, PlanEntry> = {
     hasApiAccess: false,
     hasOrderLinks: true,
     hasOrderLinkMessage: false,
+    hasProductImport: false,
+    hasMultiProductPromo: false,
+    hasMobileApp: false,
+    hasNotifications: false,
+
+    // ── Display ──────────────────────────────────────────────────────────────
+    displayName: 'Free',
+    description: 'Mulai gratis, selamanya',
+    features: [
+      '1 toko',
+      '5 produk per toko',
+      'Hanya pemilik (tanpa anggota tim)',
+      'Transaksi tidak terbatas (biaya admin IDR 1.000/transaksi)',
+      '10 link pesanan sementara',
+      '3 kode promo (satu produk per kode)',
+      'Halaman pelacakan pesanan publik',
+      'Label pengiriman PDF',
+    ],
+  },
+
+  starter: {
+    // ── Pricing ──────────────────────────────────────────────────────────────
+    priceIdr: 150_000,
+    discount: null,
+    transactionFeeIdr: 0,
+
+    // ── Limits ───────────────────────────────────────────────────────────────
+    maxStores: 1,
+    maxProductsPerStore: 15,
+    maxMembersPerStore: 2,
+    maxTemporaryOrderLinks: null,
+    maxPermanentOrderLinks: 10,
+    maxPromoCodes: 10,
+
+    // ── Features ─────────────────────────────────────────────────────────────
+    hasCategorization: true,
+    hasStorefrontCustomization: false,
+    hasApiAccess: false,
+    hasOrderLinks: true,
+    hasOrderLinkMessage: false,
     hasProductImport: true,
+    hasMultiProductPromo: false,
+    hasMobileApp: true,
+    hasNotifications: true,
 
     // ── Display ──────────────────────────────────────────────────────────────
     displayName: 'Starter',
     description: 'Untuk memulai bisnis jastip kamu',
     features: [
       '1 toko',
-      '10 produk per toko',
+      '15 produk per toko (dengan kategorisasi)',
       '1 anggota tim tambahan',
-      'Transaksi tidak terbatas',
-      'Link pesanan sementara tidak terbatas',
-      'Manajemen stok & transaksi di mobile app',
-      'Dukungan terbatas',
+      'Transaksi tidak terbatas, tanpa biaya admin',
+      'Link pesanan sementara tidak terbatas + 10 link permanen',
+      '10 kode promo (satu produk per kode)',
+      'Mobile app: manajemen stok & transaksi',
+      'Notifikasi push & email (status pesanan, stok rendah)',
+      'Dukungan merchant',
     ],
   },
 
@@ -142,12 +203,15 @@ export const PLANS_CONFIG: Record<string, PlanEntry> = {
     // ── Pricing ──────────────────────────────────────────────────────────────
     priceIdr: 300_000,
     discount: null,
+    transactionFeeIdr: 0,
 
     // ── Limits ───────────────────────────────────────────────────────────────
     maxStores: 3,
     maxProductsPerStore: 50,
     maxMembersPerStore: 5,
-    maxPermanentOrderLinks: 5,
+    maxTemporaryOrderLinks: null,
+    maxPermanentOrderLinks: 50,
+    maxPromoCodes: 25,
 
     // ── Features ─────────────────────────────────────────────────────────────
     hasCategorization: true,
@@ -156,6 +220,9 @@ export const PLANS_CONFIG: Record<string, PlanEntry> = {
     hasOrderLinks: true,
     hasOrderLinkMessage: true,
     hasProductImport: true,
+    hasMultiProductPromo: true,
+    hasMobileApp: true,
+    hasNotifications: true,
 
     // ── Display ──────────────────────────────────────────────────────────────
     displayName: 'Growth',
@@ -166,9 +233,11 @@ export const PLANS_CONFIG: Record<string, PlanEntry> = {
       '50 produk per toko (dengan kategorisasi)',
       '4 anggota tim tambahan',
       'Transaksi tidak terbatas',
-      'Link pesanan sementara tidak terbatas + 5 link permanen dengan pesan personal',
-      'Manajemen produk, stok & transaksi di mobile app',
-      'Dukungan prioritas',
+      'Link pesanan sementara tidak terbatas + 50 link permanen dengan pesan personal',
+      '25 kode promo (beberapa produk per kode)',
+      'Mobile app: manajemen produk, stok & transaksi',
+      'Notifikasi push & email',
+      'Dukungan merchant prioritas',
       'Bantuan setup',
       'Akses fitur baru lebih awal',
     ],
@@ -178,12 +247,15 @@ export const PLANS_CONFIG: Record<string, PlanEntry> = {
     // ── Pricing ──────────────────────────────────────────────────────────────
     priceIdr: 1_000_000,
     discount: null,
+    transactionFeeIdr: 0,
 
     // ── Limits ───────────────────────────────────────────────────────────────
     maxStores: 10,
     maxProductsPerStore: 200,
     maxMembersPerStore: 26,
-    maxPermanentOrderLinks: 25,
+    maxTemporaryOrderLinks: null,
+    maxPermanentOrderLinks: 100,
+    maxPromoCodes: null,
 
     // ── Features ─────────────────────────────────────────────────────────────
     hasCategorization: true,
@@ -192,6 +264,9 @@ export const PLANS_CONFIG: Record<string, PlanEntry> = {
     hasOrderLinks: true,
     hasOrderLinkMessage: true,
     hasProductImport: true,
+    hasMultiProductPromo: true,
+    hasMobileApp: true,
+    hasNotifications: true,
 
     // ── Display ──────────────────────────────────────────────────────────────
     displayName: 'Business',
@@ -201,8 +276,9 @@ export const PLANS_CONFIG: Record<string, PlanEntry> = {
       '200 produk per toko (dengan kategorisasi)',
       '25 anggota tim tambahan (lebih lanjut berbayar)',
       'Semua fitur Growth',
-      '25 link permanen dengan pesan personal',
+      '100 link permanen dengan pesan personal',
       '1 kustomisasi storefront (lebih lanjut berbayar)',
+      'Dashboard analitik (performa link & kode promo)',
     ],
   },
 
@@ -210,12 +286,15 @@ export const PLANS_CONFIG: Record<string, PlanEntry> = {
     // ── Pricing ──────────────────────────────────────────────────────────────
     priceIdr: null,
     discount: null,
+    transactionFeeIdr: 0,
 
     // ── Limits ───────────────────────────────────────────────────────────────
     maxStores: null,
     maxProductsPerStore: null,
     maxMembersPerStore: null,
+    maxTemporaryOrderLinks: null,
     maxPermanentOrderLinks: null,
+    maxPromoCodes: null,
 
     // ── Features ─────────────────────────────────────────────────────────────
     hasCategorization: true,
@@ -224,6 +303,9 @@ export const PLANS_CONFIG: Record<string, PlanEntry> = {
     hasOrderLinks: true,
     hasOrderLinkMessage: true,
     hasProductImport: true,
+    hasMultiProductPromo: true,
+    hasMobileApp: true,
+    hasNotifications: true,
 
     // ── Display ──────────────────────────────────────────────────────────────
     displayName: 'Enterprise',
@@ -236,5 +318,4 @@ export const PLANS_CONFIG: Record<string, PlanEntry> = {
     ],
     contactEmail: 'hello@jastipplatform.com',
   },
-
 };

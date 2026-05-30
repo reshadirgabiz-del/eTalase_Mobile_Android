@@ -1,301 +1,154 @@
-# Jastip Platform — Production Deployment Guide (Web)
+# Production Deployment Guide
 
-> **Scope:** Backend (NestJS on Railway) + Frontend (Next.js on Vercel). Mobile is Release 2.
-
----
-
-## Pre-flight: What's Already Done
-
-Both repos are already on GitHub and up to date:
-- **Backend**: `github.com/reshadirgabiz-del/jastip-backend`
-- **Frontend**: `github.com/RESHADIRGABIZ-DEL/jastip-live`
-
-Phase 1 (push to GitHub) is complete. Start at Phase 2.
+This guide covers everything needed to ship the current branch to production.
 
 ---
 
-## Phase 2 — Database (Supabase)
+## What's changing
 
-Open **Supabase → SQL Editor** and run these files **in this exact order**:
-
-| # | File |
+| Area | Change |
 |---|---|
-| 1 | `supabase/schema.sql` |
-| 2 | `supabase/migrations/20260519_add_invitation_fields.sql` |
-| 3 | `supabase/migrations/20260520_add_subscriptions.sql` |
-| 4 | `supabase/migrations/20260521_add_order_links.sql` |
-| 5 | `supabase/migrations/20260522_order_links_message_permanent.sql` |
-| 6 | `supabase/migrations/20260523_add_enabled_couriers.sql` |
-| 7 | `supabase/migrations/20260524_add_r2_cleanup_queue.sql` |
-| 8 | `supabase/migrations/20260525_add_push_tokens.sql` |
-| 9 | `supabase/migrations/20260526_add_promo_codes.sql` |
-| 10 | `supabase/migrations/20260527_add_promo_code_conditions.sql` |
-| 11 | `supabase/migrations/20260528_atomic_promo_increment.sql` |
-| 12 | `supabase/rls.sql` |
-
-After running, confirm in **Supabase → Storage** that the `order-attachments` bucket exists and is **private**.
-
-**Collect these credentials** (needed in Phase 3):
-- Project URL (`https://xxxx.supabase.co`)
-- `service_role` secret key
-- `anon` public key
+| **Subscriptions** | Plan limits/prices can now be overridden from the DB (admin API), cached on boot |
+| **Settings** | Structured origin address (city, province, postal code); public settings endpoint; social links |
+| **Delivery** | Switched from lat/lng to area-name origin lookup via Biteship; flat-rate delivery support |
+| **Products** | New `subtitle` and `discounted_price` fields |
+| **Admin API** | `GET/PATCH /admin/plans` — edit plan config from DB; `POST /admin/plans/cancel-stale` |
+| **Admin CLI** | Local CLI tool in `Admin/` for DB management |
 
 ---
 
-## Phase 3 — Cloudflare R2 (Order Attachments)
+## Step 1 — Run database migrations
 
-Order attachments are stored in Cloudflare R2, not Supabase Storage. Without this, any file upload in the dashboard will fail silently.
+Run these in order on your Supabase project. You can use the Supabase Dashboard SQL editor or `psql`.
 
-**3.1 Create an R2 bucket**
+### Combined migration script
 
-1. Go to Cloudflare Dashboard → R2 → Create bucket. Name it `jastip-attachments`.
-2. Under the bucket → **Settings → Public Access**, enable the public development URL (or bind a custom domain).
-3. Copy the public URL (e.g. `https://pub-xxxx.r2.dev`).
+Copy and run this entire block — it is safe to re-run (all statements are idempotent):
 
-**3.2 Create R2 API credentials**
+```sql
+-- ── 1. plan_configs ──────────────────────────────────────────────────────────
+-- Stores per-plan overrides editable via the admin API.
+-- If a plan has no row here, the backend uses its hardcoded defaults.
+CREATE TABLE IF NOT EXISTS plan_configs (
+  plan_key   TEXT        PRIMARY KEY,
+  config     JSONB       NOT NULL DEFAULT '{}',
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
 
-1. Cloudflare Dashboard → R2 → **Manage R2 API Tokens** → Create API Token.
-2. Give it **Object Read & Write** permission scoped to your bucket.
-3. Copy the **Access Key ID** and **Secret Access Key**.
+-- ── 2. product subtitle & discounted price ───────────────────────────────────
+ALTER TABLE products
+  ADD COLUMN IF NOT EXISTS subtitle         TEXT,
+  ADD COLUMN IF NOT EXISTS discounted_price NUMERIC(12, 2) CHECK (discounted_price >= 0);
 
-**Collect these** (needed in Phase 4):
-- `R2_ACCOUNT_ID` — your Cloudflare account ID (top-right of the dashboard)
-- `R2_ACCESS_KEY_ID`
-- `R2_SECRET_ACCESS_KEY`
-- `R2_BUCKET_NAME` = `jastip-attachments`
-- `R2_PUBLIC_URL` = `https://pub-xxxx.r2.dev`
+-- ── 3. subscriptions amount_paid ─────────────────────────────────────────────
+ALTER TABLE subscriptions
+  ADD COLUMN IF NOT EXISTS amount_paid INTEGER;
+
+-- ── 4. settings — structured origin address ──────────────────────────────────
+ALTER TABLE settings
+  ADD COLUMN IF NOT EXISTS origin_city        TEXT,
+  ADD COLUMN IF NOT EXISTS origin_province    TEXT,
+  ADD COLUMN IF NOT EXISTS origin_postal_code TEXT;
+```
+
+### Where to run it
+
+**Option A — Supabase Dashboard (easiest)**
+1. Go to [supabase.com/dashboard](https://supabase.com/dashboard) → your project
+2. Open **SQL Editor** → **New query**
+3. Paste the block above and click **Run**
+
+**Option B — psql**
+```bash
+psql "$DATABASE_URL" -f - <<'SQL'
+# (paste the block above)
+SQL
+```
 
 ---
 
-## Phase 4 — Deploy Backend (Railway)
+## Step 2 — Set new environment variables (Netlify)
 
-**4.1 Create a Railway project**
+Go to **Netlify → your backend site → Site configuration → Environment variables** and add/verify:
 
-1. Go to [railway.app](https://railway.app) → New Project → Deploy from GitHub repo
-2. Select `jastip-backend`
-3. Railway auto-detects Node.js
-
-**4.2 Set environment variables in Railway**
-
-Go to your service → **Variables** tab and add every key below:
-
-```
-PORT=3001
-CORS_ORIGIN=https://your-vercel-url.vercel.app    ← placeholder, fill after Phase 5
-
-SUPABASE_URL=https://xxxx.supabase.co
-SUPABASE_SERVICE_ROLE_KEY=<service_role_key>
-
-CLERK_SECRET_KEY=sk_live_xxxx
-CLERK_WEBHOOK_SECRET=whsec_xxxx
-
-MIDTRANS_IS_PRODUCTION=false
-MIDTRANS_SERVER_KEY=SB-Mid-server-xxxx
-MIDTRANS_CLIENT_KEY=SB-Mid-client-xxxx
-
-BITESHIP_API_KEY=<biteship_sandbox_key>
-BITESHIP_API_URL=https://api.biteship.com/v1
-
-R2_ACCOUNT_ID=<cloudflare_account_id>
-R2_ACCESS_KEY_ID=<r2_access_key>
-R2_SECRET_ACCESS_KEY=<r2_secret_key>
-R2_BUCKET_NAME=jastip-attachments
-R2_PUBLIC_URL=https://pub-xxxx.r2.dev
-
-SMTP_HOST=smtp.gmail.com
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=your@email.com
-SMTP_PASS=<gmail_app_password>
-SMTP_FROM=no-reply@yourdomain.com
-
-FRONTEND_URL=https://your-vercel-url.vercel.app   ← placeholder, fill after Phase 5
-```
-
-> **Do NOT set `MIDTRANS_MOCK_MODE`** — that is a dev-only bypass. Leave it unset in production.
-
-**4.3 Verify build & start commands in Railway → Settings → Build**
-
-```
-Build command:  npm run build
-Start command:  node dist/main
-```
-
-**4.4 Deploy and verify**
-
-1. Trigger a deploy — watch logs until you see `Nest application successfully started`
-2. Railway provides a URL like `https://jastip-backend-production.up.railway.app`
-3. Test: `curl https://your-railway-url.up.railway.app/` — should return `200 OK`
-4. **Copy this URL** — needed for Phase 5
-
----
-
-## Phase 5 — Deploy Frontend (Vercel)
-
-**5.1 Import to Vercel**
-
-1. Go to [vercel.com](https://vercel.com) → New Project → Import Git Repository
-2. Select `jastip-live`
-3. Framework preset: **Next.js** (auto-detected)
-4. **Do not deploy yet** — set env vars first
-
-**5.2 Set environment variables in Vercel → Settings → Environment Variables**
-
-```
-NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_live_xxxx
-CLERK_SECRET_KEY=sk_live_xxxx
-
-NEXT_PUBLIC_CLERK_SIGN_IN_URL=/sign-in
-NEXT_PUBLIC_CLERK_SIGN_UP_URL=/sign-up
-NEXT_PUBLIC_CLERK_AFTER_SIGN_IN_URL=/
-NEXT_PUBLIC_CLERK_AFTER_SIGN_UP_URL=/
-
-NEXT_PUBLIC_API_URL=https://your-railway-url.up.railway.app
-
-NEXT_PUBLIC_STORE_ID=                            ← leave blank for now
-
-NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=SB-Mid-client-xxxx
-NEXT_PUBLIC_MIDTRANS_SNAP_URL=https://app.sandbox.midtrans.com/snap/snap.js
-
-NEXT_PUBLIC_MERCHANT_NAME=Nama Toko Kamu
-NEXT_PUBLIC_MERCHANT_TAGLINE=Tagline toko kamu
-NEXT_PUBLIC_MERCHANT_LOGO_URL=https://...
-NEXT_PUBLIC_MERCHANT_COLOR=#2563eb
-NEXT_PUBLIC_MERCHANT_LAT=-6.2088
-NEXT_PUBLIC_MERCHANT_LNG=106.8456
-NEXT_PUBLIC_MERCHANT_ADDRESS=Jakarta, Indonesia
-```
-
-**5.3 Deploy**
-
-Click **Deploy**. Watch the build log — it should complete with no TypeScript errors. Vercel provides a URL like `https://jastip-live.vercel.app`.
-
----
-
-## Phase 6 — Wire Up the Two Services
-
-Now that both URLs are known, update the cross-references.
-
-**6.1 Update Backend env vars on Railway**
-
-```
-CORS_ORIGIN=https://jastip-live.vercel.app
-FRONTEND_URL=https://jastip-live.vercel.app
-```
-
-Redeploy the backend (Railway → Deployments → Redeploy).
-
-**6.2 Update Clerk allowed origins**
-
-In **Clerk Dashboard → Domains → Allowed Origins**, add:
-- `https://jastip-live.vercel.app`
-
-In **Clerk Dashboard → Paths**, set:
-- Sign-in URL: `https://jastip-live.vercel.app/sign-in`
-- Sign-up URL: `https://jastip-live.vercel.app/sign-up`
-- After sign-in: `https://jastip-live.vercel.app/`
-- After sign-up: `https://jastip-live.vercel.app/`
-
----
-
-## Phase 7 — First-Run Seed (Create Your Store)
-
-**7.1 Sign up on your live frontend**
-
-Go to `https://jastip-live.vercel.app/sign-up` and create your owner account.
-
-**7.2 Get your Clerk User ID**
-
-- Open **Clerk Dashboard → Users**
-- Find your account → copy the **User ID** (starts with `user_`)
-
-**7.3 Run the seed SQL**
-
-Open `supabase/seed.sql`, replace the placeholders:
-- `user_clerk_id_here` → your Clerk User ID
-- `owner@example.com` → your email
-
-Run it in **Supabase → SQL Editor**.
-
-**7.4 Set STORE_ID in Vercel**
-
-The seed creates a store with UUID `aaaaaaaa-0000-0000-0000-000000000001`. In Vercel:
-
-```
-NEXT_PUBLIC_STORE_ID=aaaaaaaa-0000-0000-0000-000000000001
-```
-
-Go to **Deployments → Redeploy** (with existing build is fine).
-
----
-
-## Phase 8 — Configure Midtrans Webhook
-
-In **Midtrans Dashboard → Settings → Payment Notification**, set:
-
-```
-https://your-railway-url.up.railway.app/subscriptions/webhook
-```
-
-This enables subscription payments to activate automatically.
-
----
-
-## Phase 9 — Store Settings & Verification
-
-**9.1 Configure your store**
-
-Log in at `https://jastip-live.vercel.app` → **Dashboard → Settings**:
-- Store name, logo, description
-- Origin address (lat/lng — required for Biteship shipping rates)
-- Your store's own Midtrans keys
-
-**9.2 Run the verification checklist**
-
-- [ ] Storefront loads: `https://jastip-live.vercel.app/<store-id>` shows products
-- [ ] Customer can place an order and reach the Midtrans Sandbox payment screen
-- [ ] Dashboard shows the paid order after payment
-- [ ] Owner can update order status
-- [ ] Member invite email is received and the acceptance link works
-- [ ] Invited delivery member sees only the Orders tab after logging in
-- [ ] Admin member can add/edit products and create order links
-- [ ] Order link opens the storefront and pre-fills the cart
-- [ ] Subscription flow: `/pricing` → select plan → Midtrans Sandbox payment completes
-- [ ] Uploading an attachment on an order succeeds (tests R2)
-
----
-
-## Phase 10 — Go Live (Switch to Production Keys)
-
-Only do this after all sandbox tests in Phase 9 pass.
-
-**Backend (Railway):**
-```
-MIDTRANS_IS_PRODUCTION=true
-MIDTRANS_SERVER_KEY=Mid-server-xxxx          ← production key
-BITESHIP_API_KEY=<production_biteship_key>
-```
-
-**Frontend (Vercel):**
-```
-NEXT_PUBLIC_MIDTRANS_CLIENT_KEY=Mid-client-xxxx   ← production key
-NEXT_PUBLIC_MIDTRANS_SNAP_URL=https://app.midtrans.com/snap/snap.js
-```
-
-Also update per-store Midtrans keys in **Dashboard → Settings → Midtrans Configuration**.
-
-Redeploy both services after changing keys.
-
----
-
-## Quick Reference — What Lives Where
-
-| Service | Platform | Notes |
+| Variable | Description | Required |
 |---|---|---|
-| Backend (NestJS) | Railway | `node dist/main`, port from `PORT` env |
-| Frontend (Next.js) | Vercel | Auto-deploys on git push to main |
-| Database | Supabase | Schema + RLS applied in Phase 2 |
-| Auth | Clerk | Update allowed origins after each domain change |
-| Payments | Midtrans | Sandbox first → Production in Phase 10 |
-| Shipping | Biteship | Sandbox first → Production in Phase 10 |
-| File storage | Cloudflare R2 | `jastip-attachments` bucket, public URL via R2 dev domain |
+| `ADMIN_KEY` | Secret key for `x-admin-key` header on `/admin/*` routes | Yes (new) |
+| `BITESHIP_API_URL` | e.g. `https://api.biteship.com/v1` | Already set? Verify |
+| `BITESHIP_API_KEY` | Your Biteship API key | Already set? Verify |
+
+> **Note:** `ADMIN_KEY` is new. Without it every request to `/admin/plans` will return 403, which is the safe default.
+
+---
+
+## Step 3 — Deploy backend to Netlify
+
+Netlify deploys automatically on push to `main`. After pushing:
+
+1. Go to **Netlify → your backend site → Deploys**
+2. Wait for the build to finish (watch for errors)
+3. Test with a quick smoke check:
+
+```bash
+# Should return your plans array
+curl https://<your-backend>.netlify.app/.netlify/functions/api/subscriptions/plans
+
+# Should return store settings (public fields)
+curl https://<your-backend>.netlify.app/.netlify/functions/api/settings/public/<your-store-id>
+```
+
+---
+
+## Step 4 — Update store origin address
+
+The delivery system now uses city/province text fields instead of lat/lng. After deploying:
+
+1. Log in as store owner
+2. Go to **Settings → Store**
+3. Fill in **Origin City**, **Origin Province**, and **Origin Postal Code**
+4. Save — delivery estimates will now resolve correctly via Biteship
+
+---
+
+## Step 5 — (Optional) Set plan overrides via admin API
+
+If you want to override pricing/limits for a plan without redeploying:
+
+```bash
+# View current effective config for all plans
+curl -H "x-admin-key: $ADMIN_KEY" \
+  https://<your-backend>.netlify.app/.netlify/functions/api/admin/plans
+
+# Override starter plan price
+curl -X PATCH \
+  -H "x-admin-key: $ADMIN_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"priceIdr": 49000}' \
+  https://<your-backend>.netlify.app/.netlify/functions/api/admin/plans/starter
+```
+
+Valid override fields: `priceIdr`, `maxProducts`, `maxOrders`, `maxOrderLinks`, `maxStaff`, `features`, `description`, `displayName`.
+
+---
+
+## Step 6 — Admin CLI (local only, no deployment)
+
+The `Admin/` folder contains a local CLI for DB operations. It does not need to be deployed.
+
+```bash
+cd Admin
+npm install
+cp .env.example .env   # fill in SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY
+npm start              # launches the CLI menu
+```
+
+---
+
+## Rollback
+
+All DB migrations use `ADD COLUMN IF NOT EXISTS` / `CREATE TABLE IF NOT EXISTS` — they add columns, never drop them. Rolling back the backend code is safe; the extra columns are harmless.
+
+If you need to roll back the `plan_configs` table:
+```sql
+DROP TABLE IF EXISTS plan_configs;
+```
