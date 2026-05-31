@@ -8,8 +8,15 @@ import {
 import { notifications } from '@mantine/notifications';
 import { modals } from '@mantine/modals';
 import { IconPlus, IconTrash, IconPower } from '@tabler/icons-react';
-import type { PlanVoucher } from '@/types';
+import type { Plan, PlanVoucher } from '@/types';
 import { formatDate, formatIDR } from '@/lib/utils';
+
+const PLAN_COLORS: Record<Plan, string> = {
+  starter: 'gray',
+  growth: 'teal',
+  business: 'blue',
+  enterprise: 'violet',
+};
 
 export default function VouchersPage() {
   const [data, setData] = useState<PlanVoucher[]>([]);
@@ -22,6 +29,7 @@ export default function VouchersPage() {
     value: 10 as number,
     maxUsages: '',
     expires: '',
+    applicablePlan: null as Plan | null,
   });
 
   const fetchData = async () => {
@@ -77,6 +85,7 @@ export default function VouchersPage() {
           value: form.value,
           maxUsages: form.maxUsages ? Number(form.maxUsages) : undefined,
           expires: form.expires || undefined,
+          applicablePlan: form.applicablePlan ?? undefined,
         }),
       });
       const result = await r.json();
@@ -86,7 +95,7 @@ export default function VouchersPage() {
       }
       notifications.show({ color: 'green', message: `Voucher ${result.code} created` });
       setCreateOpen(false);
-      setForm({ code: '', type: 'percent', value: 10, maxUsages: '', expires: '' });
+      setForm({ code: '', type: 'percent', value: 10, maxUsages: '', expires: '', applicablePlan: null });
       fetchData();
     } finally {
       setCreating(false);
@@ -111,6 +120,7 @@ export default function VouchersPage() {
               <Table.Tr>
                 <Table.Th>Code</Table.Th>
                 <Table.Th>Discount</Table.Th>
+                <Table.Th>Plan</Table.Th>
                 <Table.Th>Used / Max</Table.Th>
                 <Table.Th>Expires</Table.Th>
                 <Table.Th>Status</Table.Th>
@@ -121,7 +131,7 @@ export default function VouchersPage() {
             <Table.Tbody>
               {data.length === 0 ? (
                 <Table.Tr>
-                  <Table.Td colSpan={7}>
+                  <Table.Td colSpan={8}>
                     <Text c="dimmed" ta="center" py="md">
                       No vouchers found
                     </Text>
@@ -141,6 +151,15 @@ export default function VouchersPage() {
                           ? `${v.discount_value}%`
                           : formatIDR(v.discount_value)}
                       </Badge>
+                    </Table.Td>
+                    <Table.Td>
+                      {v.applicable_plan ? (
+                        <Badge color={PLAN_COLORS[v.applicable_plan]} variant="light" tt="capitalize">
+                          {v.applicable_plan}
+                        </Badge>
+                      ) : (
+                        <Text size="xs" c="dimmed">All plans</Text>
+                      )}
                     </Table.Td>
                     <Table.Td>
                       {v.current_usages} / {v.max_usages ?? '∞'}
@@ -191,9 +210,10 @@ export default function VouchersPage() {
             label="Code"
             placeholder="WELCOME20"
             value={form.code}
-            onChange={(e) =>
-              setForm((f) => ({ ...f, code: e.currentTarget.value.toUpperCase() }))
-            }
+            onChange={(e) => {
+              const val = e.currentTarget.value;
+              setForm((f) => ({ ...f, code: val.toUpperCase() }));
+            }}
             required
           />
           <Select
@@ -215,17 +235,31 @@ export default function VouchersPage() {
             onChange={(v) => setForm((f) => ({ ...f, value: typeof v === 'number' ? v : 10 }))}
             required
           />
+          <Select
+            label="Applicable Plan"
+            description="Leave blank to apply to all plans"
+            data={[
+              { value: 'starter', label: 'Starter' },
+              { value: 'growth', label: 'Growth' },
+              { value: 'business', label: 'Business' },
+              { value: 'enterprise', label: 'Enterprise' },
+            ]}
+            value={form.applicablePlan}
+            onChange={(v) => setForm((f) => ({ ...f, applicablePlan: (v as Plan | null) }))}
+            clearable
+            placeholder="All plans"
+          />
           <TextInput
             label="Max Usages"
             placeholder="Leave blank for unlimited"
             value={form.maxUsages}
-            onChange={(e) => setForm((f) => ({ ...f, maxUsages: e.currentTarget.value }))}
+            onChange={(e) => { const val = e.currentTarget.value; setForm((f) => ({ ...f, maxUsages: val })); }}
           />
           <TextInput
             label="Expiry Date"
             placeholder="YYYY-MM-DD (optional)"
             value={form.expires}
-            onChange={(e) => setForm((f) => ({ ...f, expires: e.currentTarget.value }))}
+            onChange={(e) => { const val = e.currentTarget.value; setForm((f) => ({ ...f, expires: val })); }}
           />
           <Button onClick={handleCreate} loading={creating} fullWidth mt="xs">
             Create

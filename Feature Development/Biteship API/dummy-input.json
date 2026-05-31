@@ -1,0 +1,68 @@
+{
+  "_comment": "Addresses are verifiable on Nominatim (OpenStreetMap). area_query is used for Biteship area ID resolution.",
+  "order_reference": "DEMO-ETALASE-001",
+  "store": {
+    "_comment_plan": "free | basic | pro — non-free plans can show a custom store logo",
+    "plan": "free",
+    "logo_path": ""
+  },
+  "delivery_type": "now",
+
+  "sender": {
+    "name": "e-talase Jastip Store",
+    "phone": "081234567890",
+    "address": "Jl. Kemang Raya No. 12, RT 001/RW 003, Bangka",
+    "city": "Jakarta Selatan",
+    "province": "DKI Jakarta",
+    "postal_code": "12730",
+    "area_query": "Kemang, Mampang Prapatan, Jakarta Selatan"
+  },
+
+  "recipient": {
+    "name": "Budi Santoso",
+    "phone": "082198765432",
+    "address": "Jl. Rungkut Industri III No. 45, RT 002/RW 005, Rungkut",
+    "city": "Surabaya",
+    "province": "Jawa Timur",
+    "postal_code": "60293",
+    "area_query": "Rungkut, Surabaya, Jawa Timur"
+  },
+
+  "courier": {
+    "company": "jne",
+    "type": "reg",
+    "insurance": false
+  },
+
+  "items": [
+    {
+      "name": "Sepatu Nike Air Max 270",
+      "description": "Sepatu lari pria ukuran 42, warna hitam putih",
+      "value": 1250000,
+      "weight": 850,
+      "height": 15,
+      "length": 33,
+      "width": 22,
+      "quantity": 1,
+      "type": "Alas Kaki"
+    },
+    {
+      "name": "Kaus Polo Ralph Lauren",
+      "description": "Kaus polo pria ukuran M, warna navy",
+      "value": 650000,
+      "weight": 300,
+      "height": 3,
+      "length": 30,
+      "width": 25,
+      "quantity": 2,
+      "type": "Pakaian"
+    }
+  ],
+
+  "notes": "Harap dikemas dengan bubble wrap. Barang mudah penyok.",
+
+  "cod": {
+    "enabled": false,
+    "amount": 0
+  }
+}

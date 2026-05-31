@@ -1,0 +1,18 @@
+{
+  "name": "biteship-api-feature",
+  "version": "1.0.0",
+  "description": "Biteship order creation + label + tracking prototype for e-talase",
+  "main": "run-demo.js",
+  "type": "commonjs",
+  "scripts": {
+    "demo": "node run-demo.js",
+    "lookup": "node -e \"require('dotenv').config(); require('./biteship-procedures').lookupAreaId('Jakarta Selatan').then(id => console.log('Area ID:', id))\"",
+    "rates": "node -e \"require('dotenv').config(); const p=require('./biteship-procedures'), d=require('./dummy-input.json'); Promise.all([p.lookupAreaId(d.sender.area_query), p.lookupAreaId(d.recipient.area_query)]).then(([o,de])=>p.getRates(o,de,d.items).then(r=>console.log(JSON.stringify(r.slice(0,5),null,2))))\""
+  },
+  "dependencies": {
+    "axios": "^1.6.0",
+    "bwip-js": "^3.4.0",
+    "dotenv": "^16.3.0",
+    "express": "^4.18.0"
+  }
+}

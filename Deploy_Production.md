@@ -67,9 +67,9 @@ SQL
 
 ---
 
-## Step 2 — Set new environment variables (Netlify)
+## Step 2 — Set new environment variables (Railway)
 
-Go to **Netlify → your backend site → Site configuration → Environment variables** and add/verify:
+Go to **Railway → your backend service → Variables** and add/verify:
 
 | Variable | Description | Required |
 |---|---|---|
@@ -81,20 +81,20 @@ Go to **Netlify → your backend site → Site configuration → Environment var
 
 ---
 
-## Step 3 — Deploy backend to Netlify
+## Step 3 — Deploy backend to Railway
 
-Netlify deploys automatically on push to `main`. After pushing:
+Railway redeploys automatically when you push to `main`. After pushing:
 
-1. Go to **Netlify → your backend site → Deploys**
-2. Wait for the build to finish (watch for errors)
+1. Go to **Railway → your backend service → Deployments**
+2. Wait for the build to finish (watch for errors in the build logs)
 3. Test with a quick smoke check:
 
 ```bash
 # Should return your plans array
-curl https://<your-backend>.netlify.app/.netlify/functions/api/subscriptions/plans
+curl https://<your-backend>.up.railway.app/subscriptions/plans
 
 # Should return store settings (public fields)
-curl https://<your-backend>.netlify.app/.netlify/functions/api/settings/public/<your-store-id>
+curl https://<your-backend>.up.railway.app/settings/public/<your-store-id>
 ```
 
 ---
@@ -117,14 +117,14 @@ If you want to override pricing/limits for a plan without redeploying:
 ```bash
 # View current effective config for all plans
 curl -H "x-admin-key: $ADMIN_KEY" \
-  https://<your-backend>.netlify.app/.netlify/functions/api/admin/plans
+  https://<your-backend>.up.railway.app/admin/plans
 
 # Override starter plan price
 curl -X PATCH \
   -H "x-admin-key: $ADMIN_KEY" \
   -H "Content-Type: application/json" \
   -d '{"priceIdr": 49000}' \
-  https://<your-backend>.netlify.app/.netlify/functions/api/admin/plans/starter
+  https://<your-backend>.up.railway.app/admin/plans/starter
 ```
 
 Valid override fields: `priceIdr`, `maxProducts`, `maxOrders`, `maxOrderLinks`, `maxStaff`, `features`, `description`, `displayName`.
