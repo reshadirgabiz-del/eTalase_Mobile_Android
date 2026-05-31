@@ -7,13 +7,17 @@ import {
   IconTag,
   IconBuildingStore,
   IconDatabase,
+  IconListDetails,
+  IconCoin,
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/', icon: IconLayoutDashboard },
+  { label: 'Plans', href: '/plans', icon: IconListDetails },
   { label: 'Subscriptions', href: '/subscriptions', icon: IconCreditCard },
+  { label: 'Credits', href: '/credits', icon: IconCoin },
   { label: 'Vouchers', href: '/vouchers', icon: IconTag },
   { label: 'Stores', href: '/stores', icon: IconBuildingStore },
   { label: 'Migrations', href: '/migrations', icon: IconDatabase },
