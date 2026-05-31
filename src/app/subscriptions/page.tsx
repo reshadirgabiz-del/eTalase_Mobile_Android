@@ -4,13 +4,15 @@ import { useEffect, useState, useMemo } from 'react';
 import {
   Stack, Title, Group, Button, TextInput, Select, Table, Badge,
   Menu, ActionIcon, Text, Loader, Modal, NumberInput, Tabs,
-  SimpleGrid, Paper, Divider,
+  SimpleGrid, Paper, Divider, Drawer, Switch, CopyButton, Tooltip,
+  Anchor, Image,
 } from '@mantine/core';
 import { notifications } from '@mantine/notifications';
 import { modals } from '@mantine/modals';
 import {
   IconDots, IconCircleOff, IconX, IconPlus, IconSearch,
-  IconTrash, IconCurrencyDollar,
+  IconTrash, IconCurrencyDollar, IconCheck, IconArchive, IconCopy,
+  IconExternalLink,
 } from '@tabler/icons-react';
 import type { Subscription } from '@/types';
 import { formatDate, truncate, formatIDR } from '@/lib/utils';
@@ -46,11 +48,48 @@ type RevenueData = {
   payments: Payment[];
 };
 
+function isExpiringSoon(expiresAt: string | null): boolean {
+  if (!expiresAt) return false;
+  const diff = new Date(expiresAt).getTime() - Date.now();
+  return diff > 0 && diff <= 7 * 24 * 60 * 60 * 1000;
+}
+
+function canArchive(s: Subscription): boolean {
+  return s.status === 'cancelled' || (s.status === 'active' && isExpiringSoon(s.expires_at));
+}
+
+function DetailRow({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <Group justify="space-between" align="flex-start" wrap="nowrap">
+      <Text size="sm" c="dimmed" w={160} style={{ flexShrink: 0 }}>{label}</Text>
+      <div style={{ flex: 1, minWidth: 0 }}>{children}</div>
+    </Group>
+  );
+}
+
+function CopyableText({ value }: { value: string }) {
+  return (
+    <Group gap={4} wrap="nowrap">
+      <Text size="sm" ff="monospace" style={{ wordBreak: 'break-all' }}>{value}</Text>
+      <CopyButton value={value} timeout={1500}>
+        {({ copied, copy }) => (
+          <Tooltip label={copied ? 'Copied!' : 'Copy'} withArrow>
+            <ActionIcon size="xs" variant="subtle" color={copied ? 'teal' : 'gray'} onClick={copy}>
+              {copied ? <IconCheck size={10} /> : <IconCopy size={10} />}
+            </ActionIcon>
+          </Tooltip>
+        )}
+      </CopyButton>
+    </Group>
+  );
+}
+
 export default function SubscriptionsPage() {
   const [data, setData] = useState<Subscription[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [userFilter, setUserFilter] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
   const [activateOpen, setActivateOpen] = useState(false);
   const [activating, setActivating] = useState(false);
   const [cancellingStale, setCancellingStale] = useState(false);
@@ -58,6 +97,11 @@ export default function SubscriptionsPage() {
 
   const [revenue, setRevenue] = useState<RevenueData | null>(null);
   const [revenueLoading, setRevenueLoading] = useState(false);
+
+  const [selectedSub, setSelectedSub] = useState<Subscription | null>(null);
+  const [confirmAmount, setConfirmAmount] = useState<number | string>(0);
+  const [confirming, setConfirming] = useState(false);
+  const [archiving, setArchiving] = useState(false);
 
   const fetchData = async () => {
     setLoading(true);
@@ -84,11 +128,12 @@ export default function SubscriptionsPage() {
   const filtered = useMemo(
     () =>
       data.filter((s) => {
+        if (!showArchived && s.is_archived) return false;
         if (statusFilter && s.status !== statusFilter) return false;
         if (userFilter && !s.user_id.toLowerCase().includes(userFilter.toLowerCase())) return false;
         return true;
       }),
-    [data, statusFilter, userFilter],
+    [data, statusFilter, userFilter, showArchived],
   );
 
   const handleAction = (id: string, action: 'expire' | 'cancel') => {
@@ -105,6 +150,7 @@ export default function SubscriptionsPage() {
         });
         if (r.ok) {
           notifications.show({ color: 'green', message: `Subscription ${action}d` });
+          if (selectedSub?.id === id) setSelectedSub(null);
           fetchData();
         } else {
           const err = await r.json();
@@ -112,6 +158,54 @@ export default function SubscriptionsPage() {
         }
       },
     });
+  };
+
+  const handleConfirmPayment = async () => {
+    if (!selectedSub) return;
+    const amount = typeof confirmAmount === 'string' ? parseFloat(confirmAmount) : confirmAmount;
+    if (!amount || amount <= 0) {
+      notifications.show({ color: 'red', message: 'Enter a valid amount' });
+      return;
+    }
+    setConfirming(true);
+    try {
+      const r = await fetch(`/api/subscriptions/${selectedSub.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'confirm', amount_paid: amount }),
+      });
+      if (r.ok) {
+        notifications.show({ color: 'green', message: 'Payment confirmed — subscription activated' });
+        setSelectedSub(null);
+        fetchData();
+      } else {
+        const err = await r.json();
+        notifications.show({ color: 'red', message: err.error ?? 'Error' });
+      }
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  const handleArchive = async (id: string) => {
+    setArchiving(true);
+    try {
+      const r = await fetch(`/api/subscriptions/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'archive' }),
+      });
+      if (r.ok) {
+        notifications.show({ color: 'teal', message: 'Subscription archived' });
+        if (selectedSub?.id === id) setSelectedSub(null);
+        fetchData();
+      } else {
+        const err = await r.json();
+        notifications.show({ color: 'red', message: err.error ?? 'Error' });
+      }
+    } finally {
+      setArchiving(false);
+    }
   };
 
   const handleActivate = async () => {
@@ -195,6 +289,12 @@ export default function SubscriptionsPage() {
                   clearable
                   w={160}
                 />
+                <Switch
+                  label="Show archived"
+                  checked={showArchived}
+                  onChange={(e) => setShowArchived(e.currentTarget.checked)}
+                  size="sm"
+                />
                 <Text size="sm" c="dimmed">
                   {filtered.length} record(s)
                 </Text>
@@ -219,7 +319,7 @@ export default function SubscriptionsPage() {
               <Loader />
             ) : (
               <Table.ScrollContainer minWidth={720}>
-                <Table striped highlightOnHover withTableBorder>
+                <Table striped highlightOnHover withTableBorder style={{ cursor: 'pointer' }}>
                   <Table.Thead>
                     <Table.Tr>
                       <Table.Th>ID</Table.Th>
@@ -242,7 +342,11 @@ export default function SubscriptionsPage() {
                       </Table.Tr>
                     ) : (
                       filtered.map((s) => (
-                        <Table.Tr key={s.id}>
+                        <Table.Tr
+                          key={s.id}
+                          onClick={() => { setSelectedSub(s); setConfirmAmount(0); }}
+                          style={{ opacity: s.is_archived ? 0.5 : 1 }}
+                        >
                           <Table.Td>
                             <Text size="xs" c="dimmed" ff="monospace">
                               {truncate(s.id)}
@@ -259,12 +363,20 @@ export default function SubscriptionsPage() {
                             </Badge>
                           </Table.Td>
                           <Table.Td>
-                            <Badge color={STATUS_COLORS[s.status] ?? 'gray'}>{s.status}</Badge>
+                            <Group gap={4}>
+                              <Badge color={STATUS_COLORS[s.status] ?? 'gray'}>{s.status}</Badge>
+                              {isExpiringSoon(s.expires_at) && s.status === 'active' && (
+                                <Badge color="orange" variant="dot" size="sm">expiring soon</Badge>
+                              )}
+                              {s.is_archived && (
+                                <Badge color="gray" variant="outline" size="sm">archived</Badge>
+                              )}
+                            </Group>
                           </Table.Td>
                           <Table.Td>{formatDate(s.expires_at)}</Table.Td>
                           <Table.Td>{formatDate(s.created_at)}</Table.Td>
-                          <Table.Td>
-                            {(s.status === 'active' || s.status === 'pending') && (
+                          <Table.Td onClick={(e) => e.stopPropagation()}>
+                            {(s.status === 'active' || s.status === 'pending') && !s.is_archived && (
                               <Menu shadow="md" width={160}>
                                 <Menu.Target>
                                   <ActionIcon variant="subtle" color="gray">
@@ -286,8 +398,29 @@ export default function SubscriptionsPage() {
                                   >
                                     Cancel
                                   </Menu.Item>
+                                  {canArchive(s) && (
+                                    <Menu.Item
+                                      color="gray"
+                                      leftSection={<IconArchive size={14} />}
+                                      onClick={() => handleArchive(s.id)}
+                                    >
+                                      Archive
+                                    </Menu.Item>
+                                  )}
                                 </Menu.Dropdown>
                               </Menu>
+                            )}
+                            {canArchive(s) && !s.is_archived && s.status === 'cancelled' && (
+                              <Tooltip label="Archive">
+                                <ActionIcon
+                                  variant="subtle"
+                                  color="gray"
+                                  onClick={() => handleArchive(s.id)}
+                                  loading={archiving}
+                                >
+                                  <IconArchive size={16} />
+                                </ActionIcon>
+                              </Tooltip>
                             )}
                           </Table.Td>
                         </Table.Tr>
@@ -377,6 +510,177 @@ export default function SubscriptionsPage() {
         </Tabs.Panel>
       </Tabs>
 
+      {/* Subscription Detail Drawer */}
+      <Drawer
+        opened={!!selectedSub}
+        onClose={() => setSelectedSub(null)}
+        title="Subscription Details"
+        position="right"
+        size="md"
+        padding="lg"
+      >
+        {selectedSub && (
+          <Stack gap="md">
+            <Group>
+              <Badge color={PLAN_COLORS[selectedSub.plan] ?? 'gray'} size="lg" variant="light">
+                {selectedSub.plan}
+              </Badge>
+              <Badge color={STATUS_COLORS[selectedSub.status] ?? 'gray'} size="lg">
+                {selectedSub.status}
+              </Badge>
+              {isExpiringSoon(selectedSub.expires_at) && selectedSub.status === 'active' && (
+                <Badge color="orange" variant="dot">expiring soon</Badge>
+              )}
+              {selectedSub.is_archived && (
+                <Badge color="gray" variant="outline">archived</Badge>
+              )}
+            </Group>
+
+            <Divider />
+
+            <Stack gap="xs">
+              <DetailRow label="Subscription ID">
+                <CopyableText value={selectedSub.id} />
+              </DetailRow>
+              <DetailRow label="User ID">
+                <CopyableText value={selectedSub.user_id} />
+              </DetailRow>
+            </Stack>
+
+            <Divider />
+
+            <Stack gap="xs">
+              <DetailRow label="Amount Paid">
+                {selectedSub.amount_paid != null ? (
+                  <Text size="sm" fw={600} c="green">{formatIDR(selectedSub.amount_paid)}</Text>
+                ) : (
+                  <Text size="sm" c="dimmed">—</Text>
+                )}
+              </DetailRow>
+              <DetailRow label="Order ID">
+                <Text size="sm" ff="monospace">
+                  {selectedSub.midtrans_order_id ?? '—'}
+                </Text>
+              </DetailRow>
+              {selectedSub.payment_proof_url && (
+                <>
+                  <DetailRow label="Payment Proof">
+                    <Anchor href={selectedSub.payment_proof_url} target="_blank" size="sm">
+                      <Group gap={4}>
+                        View proof <IconExternalLink size={12} />
+                      </Group>
+                    </Anchor>
+                  </DetailRow>
+                  <Image
+                    src={selectedSub.payment_proof_url}
+                    alt="Payment proof"
+                    radius="md"
+                    mah={240}
+                    fit="contain"
+                    style={{ border: '1px solid var(--mantine-color-default-border)' }}
+                  />
+                </>
+              )}
+              {selectedSub.payment_proof_submitted_at && (
+                <DetailRow label="Proof Submitted">
+                  <Text size="sm">{formatDate(selectedSub.payment_proof_submitted_at)}</Text>
+                </DetailRow>
+              )}
+            </Stack>
+
+            <Divider />
+
+            <Stack gap="xs">
+              <DetailRow label="Expires">
+                <Text size="sm">{formatDate(selectedSub.expires_at)}</Text>
+              </DetailRow>
+              <DetailRow label="Created">
+                <Text size="sm">{formatDate(selectedSub.created_at)}</Text>
+              </DetailRow>
+              <DetailRow label="Updated">
+                <Text size="sm">{formatDate(selectedSub.updated_at)}</Text>
+              </DetailRow>
+            </Stack>
+
+            {/* Confirm payment for pending (direct transfer) */}
+            {selectedSub.status === 'pending' && !selectedSub.is_archived && (
+              <>
+                <Divider label="Confirm Direct Transfer Payment" labelPosition="left" />
+                <Stack gap="xs">
+                  <Text size="xs" c="dimmed">
+                    Verify the payment proof above, then enter the amount received to activate this subscription.
+                  </Text>
+                  <Group align="flex-end">
+                    <NumberInput
+                      label="Amount received (IDR)"
+                      placeholder="e.g. 299000"
+                      value={confirmAmount}
+                      onChange={setConfirmAmount}
+                      min={1}
+                      thousandSeparator="."
+                      decimalSeparator=","
+                      style={{ flex: 1 }}
+                    />
+                    <Button
+                      color="green"
+                      leftSection={<IconCheck size={14} />}
+                      onClick={handleConfirmPayment}
+                      loading={confirming}
+                    >
+                      Confirm Payment
+                    </Button>
+                  </Group>
+                </Stack>
+              </>
+            )}
+
+            {/* Danger zone actions */}
+            {!selectedSub.is_archived && (
+              <>
+                <Divider label="Actions" labelPosition="left" />
+                <Group>
+                  {(selectedSub.status === 'active' || selectedSub.status === 'pending') && (
+                    <>
+                      <Button
+                        variant="light"
+                        color="orange"
+                        size="sm"
+                        leftSection={<IconCircleOff size={14} />}
+                        onClick={() => handleAction(selectedSub.id, 'expire')}
+                      >
+                        Expire
+                      </Button>
+                      <Button
+                        variant="light"
+                        color="red"
+                        size="sm"
+                        leftSection={<IconX size={14} />}
+                        onClick={() => handleAction(selectedSub.id, 'cancel')}
+                      >
+                        Cancel
+                      </Button>
+                    </>
+                  )}
+                  {canArchive(selectedSub) && (
+                    <Button
+                      variant="light"
+                      color="gray"
+                      size="sm"
+                      leftSection={<IconArchive size={14} />}
+                      onClick={() => handleArchive(selectedSub.id)}
+                      loading={archiving}
+                    >
+                      Archive
+                    </Button>
+                  )}
+                </Group>
+              </>
+            )}
+          </Stack>
+        )}
+      </Drawer>
+
+      {/* Activate Subscription Modal */}
       <Modal
         opened={activateOpen}
         onClose={() => setActivateOpen(false)}

@@ -28,6 +28,9 @@ export type Subscription = {
   midtrans_order_id: string | null;
   midtrans_token: string | null;
   amount_paid: number | null;
+  payment_proof_url: string | null;
+  payment_proof_submitted_at: string | null;
+  is_archived: boolean;
   created_at: string;
   updated_at: string;
 };
@@ -66,7 +69,14 @@ export type PlanVoucher = {
   current_usages: number;
   expires_at: string | null;
   is_active: boolean;
+  applicable_plan: Plan | null;
   created_at: string;
+};
+
+export type PlanPrice = {
+  plan: Plan;
+  price_idr: number;
+  updated_at: string;
 };
 
 export type PromoCode = {
