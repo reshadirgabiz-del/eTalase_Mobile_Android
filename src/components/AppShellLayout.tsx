@@ -9,6 +9,7 @@ import {
   IconDatabase,
   IconListDetails,
   IconCoin,
+  IconPhoto,
 } from '@tabler/icons-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
@@ -20,6 +21,7 @@ const NAV_ITEMS = [
   { label: 'Credits', href: '/credits', icon: IconCoin },
   { label: 'Vouchers', href: '/vouchers', icon: IconTag },
   { label: 'Stores', href: '/stores', icon: IconBuildingStore },
+  { label: 'Label', href: '/label', icon: IconPhoto },
   { label: 'Migrations', href: '/migrations', icon: IconDatabase },
 ];
 
