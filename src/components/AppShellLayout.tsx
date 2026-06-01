@@ -1,6 +1,6 @@
 'use client';
 
-import { AppShell, NavLink, Group, Title, ThemeIcon } from '@mantine/core';
+import { AppShell, NavLink, Group, Title, ThemeIcon, Button } from '@mantine/core';
 import {
   IconLayoutDashboard,
   IconCreditCard,
@@ -10,9 +10,10 @@ import {
   IconListDetails,
   IconCoin,
   IconPhoto,
+  IconLogout,
 } from '@tabler/icons-react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 
 const NAV_ITEMS = [
   { label: 'Dashboard', href: '/', icon: IconLayoutDashboard },
@@ -27,10 +28,17 @@ const NAV_ITEMS = [
 
 export function AppShellLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const router = useRouter();
+
+  async function handleLogout() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    router.push('/login');
+    router.refresh();
+  }
 
   return (
     <AppShell navbar={{ width: 220, breakpoint: 'sm' }} padding="md" h="100vh">
-      <AppShell.Navbar p="xs">
+      <AppShell.Navbar p="xs" style={{ display: 'flex', flexDirection: 'column' }}>
         <Group px="xs" py="sm" mb="sm" gap="xs">
           <ThemeIcon size="lg" variant="filled" radius="md">
             <IconBuildingStore size={18} />
@@ -38,21 +46,35 @@ export function AppShellLayout({ children }: { children: React.ReactNode }) {
           <Title order={5}>Jastip Admin</Title>
         </Group>
 
-        {NAV_ITEMS.map((item) => (
-          <NavLink
-            key={item.href}
-            component={Link}
-            href={item.href}
-            label={item.label}
-            leftSection={<item.icon size={16} />}
-            active={
-              item.href === '/'
-                ? pathname === '/'
-                : pathname.startsWith(item.href)
-            }
-            mb={2}
-          />
-        ))}
+        <div style={{ flex: 1 }}>
+          {NAV_ITEMS.map((item) => (
+            <NavLink
+              key={item.href}
+              component={Link}
+              href={item.href}
+              label={item.label}
+              leftSection={<item.icon size={16} />}
+              active={
+                item.href === '/'
+                  ? pathname === '/'
+                  : pathname.startsWith(item.href)
+              }
+              mb={2}
+            />
+          ))}
+        </div>
+
+        <Button
+          variant="subtle"
+          color="red"
+          leftSection={<IconLogout size={16} />}
+          onClick={handleLogout}
+          justify="start"
+          mt="auto"
+          mb="xs"
+        >
+          Logout
+        </Button>
       </AppShell.Navbar>
 
       <AppShell.Main>{children}</AppShell.Main>
