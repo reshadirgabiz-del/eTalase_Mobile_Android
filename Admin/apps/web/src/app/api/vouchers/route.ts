@@ -11,10 +11,11 @@ export async function GET() {
   return NextResponse.json(data);
 }
 
-const VALID_PLANS = ['starter', 'growth', 'business', 'enterprise'];
+const VALID_PLANS = ['free', 'starter', 'growth', 'business', 'enterprise'];
+const VALID_BILLING_CYCLES = ['monthly', 'annual'];
 
 export async function POST(req: NextRequest) {
-  const { code, type, value, maxUsages, expires, applicablePlan } = await req.json();
+  const { code, type, value, maxUsages, expires, applicablePlan, applicableBillingCycle } = await req.json();
 
   if (!code || !type || value == null) {
     return NextResponse.json({ error: 'code, type, and value are required' }, { status: 400 });
@@ -28,6 +29,9 @@ export async function POST(req: NextRequest) {
   if (applicablePlan && !VALID_PLANS.includes(applicablePlan)) {
     return NextResponse.json({ error: 'Invalid plan' }, { status: 400 });
   }
+  if (applicableBillingCycle && !VALID_BILLING_CYCLES.includes(applicableBillingCycle)) {
+    return NextResponse.json({ error: 'applicable_billing_cycle must be: monthly | annual' }, { status: 400 });
+  }
 
   const payload: Record<string, unknown> = {
     code: String(code).toUpperCase().trim(),
@@ -37,6 +41,7 @@ export async function POST(req: NextRequest) {
   if (maxUsages) payload.max_usages = Number(maxUsages);
   if (expires) payload.expires_at = new Date(expires).toISOString();
   if (applicablePlan) payload.applicable_plan = applicablePlan;
+  if (applicableBillingCycle) payload.applicable_billing_cycle = applicableBillingCycle;
 
   const { data, error } = await createServerClient()
     .from('plan_vouchers')

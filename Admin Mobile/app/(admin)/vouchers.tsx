@@ -20,7 +20,8 @@ import type { Plan, PlanVoucher } from '@/lib/types';
 import { Badge } from '@/components/Badge';
 import { colors, PLAN_COLORS, radius, spacing } from '@/constants/theme';
 
-const PLANS: Plan[] = ['starter', 'growth', 'business', 'enterprise'];
+const PLANS: Plan[] = ['free', 'starter', 'growth', 'business', 'enterprise'];
+const BILLING_CYCLES = ['monthly', 'annual'] as const;
 
 export default function VouchersScreen() {
   const qc = useQueryClient();
@@ -32,6 +33,7 @@ export default function VouchersScreen() {
     maxUsages: '',
     expires: '',
     applicablePlan: null as Plan | null,
+    applicableBillingCycle: null as 'monthly' | 'annual' | null,
   });
 
   const { data = [], isLoading, refetch, isRefetching } = useQuery({
@@ -60,11 +62,12 @@ export default function VouchersScreen() {
         maxUsages: form.maxUsages ? parseInt(form.maxUsages, 10) : undefined,
         expires: form.expires || undefined,
         applicablePlan: form.applicablePlan,
+        applicableBillingCycle: form.applicableBillingCycle,
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['vouchers'] });
       setCreateOpen(false);
-      setForm({ code: '', type: 'percent', value: '10', maxUsages: '', expires: '', applicablePlan: null });
+      setForm({ code: '', type: 'percent', value: '10', maxUsages: '', expires: '', applicablePlan: null, applicableBillingCycle: null });
     },
     onError: (e: Error) => Alert.alert('Error', e.message),
   });
@@ -146,6 +149,9 @@ export default function VouchersScreen() {
                 ) : (
                   <Badge label="Semua paket" color={colors.gray} size="sm" />
                 )}
+                {v.applicable_billing_cycle ? (
+                  <Badge label={v.applicable_billing_cycle === 'monthly' ? 'Bulanan' : 'Tahunan'} color={colors.cyan} size="sm" />
+                ) : null}
                 <Badge
                   label={v.is_active ? 'Aktif' : 'Nonaktif'}
                   color={v.is_active ? colors.success : colors.danger}
@@ -251,6 +257,38 @@ export default function VouchersScreen() {
                         ]}
                       >
                         {p}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              </ScrollView>
+            </View>
+
+            <View style={styles.formGroup}>
+              <Text style={styles.formLabel}>Berlaku untuk Siklus</Text>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <View style={styles.planPicker}>
+                  <TouchableOpacity
+                    style={[styles.planChip, form.applicableBillingCycle === null && styles.planChipActive]}
+                    onPress={() => setForm((f) => ({ ...f, applicableBillingCycle: null }))}
+                    activeOpacity={0.8}
+                  >
+                    <Text style={[styles.planChipText, form.applicableBillingCycle === null && styles.planChipTextActive]}>
+                      Semua
+                    </Text>
+                  </TouchableOpacity>
+                  {BILLING_CYCLES.map((c) => (
+                    <TouchableOpacity
+                      key={c}
+                      style={[
+                        styles.planChip,
+                        form.applicableBillingCycle === c && styles.planChipActive,
+                      ]}
+                      onPress={() => setForm((f) => ({ ...f, applicableBillingCycle: c }))}
+                      activeOpacity={0.8}
+                    >
+                      <Text style={[styles.planChipText, form.applicableBillingCycle === c && styles.planChipTextActive]}>
+                        {c === 'monthly' ? 'Bulanan' : 'Tahunan'}
                       </Text>
                     </TouchableOpacity>
                   ))}

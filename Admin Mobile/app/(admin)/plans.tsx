@@ -16,7 +16,7 @@ import { formatIDR, plansApi } from '@/lib/api';
 import type { Plan, PlanPrice } from '@/lib/types';
 import { colors, PLAN_COLORS, radius, spacing } from '@/constants/theme';
 
-const PLAN_ORDER: Plan[] = ['starter', 'growth', 'business', 'enterprise'];
+const PLAN_ORDER: Plan[] = ['free', 'starter', 'growth', 'business', 'enterprise'];
 
 export default function PlansScreen() {
   const qc = useQueryClient();
@@ -79,10 +79,12 @@ export default function PlansScreen() {
                     <Text style={[styles.planName, { color: planColor }]}>
                       {pp.plan.charAt(0).toUpperCase() + pp.plan.slice(1)}
                     </Text>
-                    <Text style={styles.priceText}>{formatIDR(pp.price_idr)}</Text>
+                    <Text style={styles.priceText}>
+                      {pp.price_idr === null ? 'Hubungi Kami' : formatIDR(pp.price_idr)}
+                    </Text>
                   </View>
 
-                  {isEditing ? (
+                  {pp.plan === 'enterprise' ? null : isEditing ? (
                     <View style={styles.editRow}>
                       <TextInput
                         style={styles.priceInput}

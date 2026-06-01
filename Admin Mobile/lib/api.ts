@@ -13,10 +13,17 @@ import type {
   CreditTransaction,
 } from './types';
 
+import { useAuthStore } from '@/store/authStore';
+
 const BASE = process.env.EXPO_PUBLIC_ADMIN_API_URL ?? 'http://localhost:3003';
 
+function authHeaders(): Record<string, string> {
+  const { token } = useAuthStore.getState();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 async function get<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`);
+  const res = await fetch(`${BASE}${path}`, { headers: authHeaders() });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error ?? 'Request failed');
@@ -27,7 +34,7 @@ async function get<T>(path: string): Promise<T> {
 async function post<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -40,7 +47,7 @@ async function post<T>(path: string, body?: unknown): Promise<T> {
 async function patch<T>(path: string, body?: unknown): Promise<T> {
   const res = await fetch(`${BASE}${path}`, {
     method: 'PATCH',
-    headers: { 'Content-Type': 'application/json' },
+    headers: { 'Content-Type': 'application/json', ...authHeaders() },
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
   if (!res.ok) {
@@ -51,7 +58,10 @@ async function patch<T>(path: string, body?: unknown): Promise<T> {
 }
 
 async function del<T>(path: string): Promise<T> {
-  const res = await fetch(`${BASE}${path}`, { method: 'DELETE' });
+  const res = await fetch(`${BASE}${path}`, {
+    method: 'DELETE',
+    headers: authHeaders(),
+  });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ error: res.statusText }));
     throw new Error(err.error ?? 'Request failed');
@@ -99,6 +109,7 @@ export const vouchersApi = {
     maxUsages?: number;
     expires?: string;
     applicablePlan?: Plan | null;
+    applicableBillingCycle?: 'monthly' | 'annual' | null;
   }) => post<PlanVoucher>('/api/vouchers', data),
   toggle: (code: string) => patch<PlanVoucher>(`/api/vouchers/${code}`),
   delete: (code: string) => del<{ success: boolean }>(`/api/vouchers/${code}`),
@@ -109,7 +120,7 @@ export const plansApi = {
   updatePrice: (plan: Plan, price_idr: number) =>
     fetch(`${BASE}/api/plans`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
       body: JSON.stringify({ plan, price_idr }),
     }).then((r) => r.json()),
   getBilling: () => get<BillingSettings>('/api/billing'),
@@ -139,6 +150,17 @@ export const creditsApi = {
     get<{ balances: CreditBalance[] }>('/api/credits/balances'),
   listTransactions: () =>
     get<{ transactions: CreditTransaction[] }>('/api/credits/transactions'),
+};
+
+export const notificationsApi = {
+  registerToken: (token: string) =>
+    post<{ ok: boolean }>('/api/notifications/token', { token }),
+  unregisterToken: (token: string) =>
+    fetch(`${BASE}/api/notifications/token`, {
+      method: 'DELETE',
+      headers: { 'Content-Type': 'application/json', ...authHeaders() },
+      body: JSON.stringify({ token }),
+    }).then((r) => r.json()),
 };
 
 export function formatDate(iso: string | null | undefined): string {

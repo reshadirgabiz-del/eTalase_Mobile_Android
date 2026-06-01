@@ -1,4 +1,4 @@
-export type Plan = 'starter' | 'growth' | 'business' | 'enterprise';
+export type Plan = 'free' | 'starter' | 'growth' | 'business' | 'enterprise';
 export type SubscriptionStatus = 'pending' | 'active' | 'expired' | 'cancelled';
 
 export type DashboardStats = {
@@ -32,13 +32,14 @@ export type PlanVoucher = {
   expires_at: string | null;
   is_active: boolean;
   applicable_plan: Plan | null;
+  applicable_billing_cycle: 'monthly' | 'annual' | null;
   created_at: string;
 };
 
 export type PlanPrice = {
   plan: Plan;
-  price_idr: number;
-  updated_at: string;
+  price_idr: number | null;
+  updated_at?: string;
 };
 
 export type StoreListRow = {
