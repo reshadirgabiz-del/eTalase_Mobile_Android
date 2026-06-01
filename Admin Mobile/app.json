@@ -1,0 +1,32 @@
+{
+  "expo": {
+    "name": "Jastip Admin",
+    "slug": "jastip-admin-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jastip.admin"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "backgroundColor": "#1A1A18"
+      },
+      "package": "com.jastip.admin"
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      "expo-web-browser"
+    ],
+    "scheme": "jastip-admin",
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}
