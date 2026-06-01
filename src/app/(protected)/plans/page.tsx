@@ -21,13 +21,14 @@ const TRANSFER_TEMPLATE =
   'Transfer tepat sejumlah yang tertera. Setelah transfer, konfirmasi ke info@mail.e-talase.com dengan menyertakan bukti transfer. Aktivasi paket maksimal 24 jam setelah konfirmasi diterima.';
 
 const PLAN_COLORS: Record<Plan, string> = {
+  free: 'lime',
   starter: 'gray',
   growth: 'teal',
   business: 'blue',
   enterprise: 'violet',
 };
 
-const PLAN_ORDER: Plan[] = ['starter', 'growth', 'business', 'enterprise'];
+const PLAN_ORDER: Plan[] = ['free', 'starter', 'growth', 'business', 'enterprise'];
 
 export default function PlansPage() {
   const [data, setData] = useState<PlanPrice[]>([]);
@@ -103,7 +104,7 @@ export default function PlansPage() {
 
   const openEdit = (row: PlanPrice) => {
     setEditTarget(row);
-    setNewPrice(row.price_idr);
+    setNewPrice(row.price_idr ?? 0);
   };
 
   const handleSave = async () => {
@@ -149,12 +150,18 @@ export default function PlansPage() {
                 <Badge color={PLAN_COLORS[row.plan]} variant="light" size="lg" tt="capitalize">
                   {row.plan}
                 </Badge>
-                <ActionIcon variant="subtle" color="gray" onClick={() => openEdit(row)} title="Edit price">
-                  <IconPencil size={16} />
-                </ActionIcon>
+                {row.plan !== 'enterprise' && (
+                  <ActionIcon variant="subtle" color="gray" onClick={() => openEdit(row)} title="Edit price">
+                    <IconPencil size={16} />
+                  </ActionIcon>
+                )}
               </Group>
               <Text size="xl" fw={700}>
-                {row.price_idr === 0 ? 'Free' : formatIDR(row.price_idr)}
+                {row.plan === 'enterprise'
+                  ? 'Hubungi Kami'
+                  : row.price_idr === 0
+                    ? 'Free'
+                    : formatIDR(row.price_idr ?? 0)}
               </Text>
               <Text size="xs" c="dimmed" mt={4}>per month</Text>
             </Paper>
