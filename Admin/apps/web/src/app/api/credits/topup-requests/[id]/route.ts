@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
+import { sendPushToUser } from '@/lib/expo-push';
 
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
@@ -49,6 +50,13 @@ export async function POST(_req: NextRequest, { params }: { params: Promise<{ id
     description: 'Top-up kredit akun',
     reference_id: id,
   });
+
+  sendPushToUser(
+    req.user_id,
+    'Top-up Kredit Dikonfirmasi',
+    `Top-up Rp ${req.amount_idr.toLocaleString('id-ID')} berhasil. Saldo baru: Rp ${newBalance.toLocaleString('id-ID')}`,
+    { type: 'credit_topup_confirmed', amountIdr: req.amount_idr, newBalance },
+  ).catch(() => {});
 
   return NextResponse.json({ ok: true, newBalance });
 }
