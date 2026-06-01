@@ -3,7 +3,6 @@ import { ColorSchemeScript } from '@mantine/core';
 import '@mantine/core/styles.css';
 import '@mantine/notifications/styles.css';
 import { Providers } from './providers';
-import { AppShellLayout } from '@/components/AppShellLayout';
 
 export const metadata: Metadata = {
   title: 'Jastip Admin',
@@ -17,9 +16,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <ColorSchemeScript defaultColorScheme="light" />
       </head>
       <body style={{ margin: 0 }}>
-        <Providers>
-          <AppShellLayout>{children}</AppShellLayout>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
