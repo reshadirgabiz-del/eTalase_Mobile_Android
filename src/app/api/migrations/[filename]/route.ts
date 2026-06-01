@@ -4,6 +4,12 @@ import { join } from 'path';
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ filename: string }> }) {
   const { filename } = await params;
+
+  // Reject any path traversal attempts
+  if (/[/\\]/.test(filename)) {
+    return NextResponse.json({ error: 'Invalid filename' }, { status: 400 });
+  }
+
   const name = filename.endsWith('.sql') ? filename : `${filename}.sql`;
   const dir = join(process.cwd(), '..', '..', '..', 'supabase', 'migrations');
 

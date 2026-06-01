@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createServerClient } from '@/lib/supabase';
+import { sendPushToUser } from '@/lib/expo-push';
 
 const VALID_ACTIONS = ['approve', 'reject'];
 
@@ -14,19 +15,18 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
 
   const db = createServerClient();
 
+  const { data: refund, error: fetchErr } = await db
+    .from('credit_refund_requests')
+    .select('user_id, amount_idr')
+    .eq('id', id)
+    .eq('status', 'pending')
+    .maybeSingle();
+
+  if (fetchErr || !refund) {
+    return NextResponse.json({ error: 'Refund request not found' }, { status: 404 });
+  }
+
   if (action === 'approve') {
-    // Fetch the refund request
-    const { data: refund, error: fetchErr } = await db
-      .from('credit_refund_requests')
-      .select('user_id, amount_idr')
-      .eq('id', id)
-      .eq('status', 'pending')
-      .maybeSingle();
-
-    if (fetchErr || !refund) {
-      return NextResponse.json({ error: 'Refund request not found' }, { status: 404 });
-    }
-
     // Deduct from balance (allow floor at 0 if somehow inconsistent)
     const { data: existing } = await db
       .from('account_credits')
@@ -59,5 +59,17 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ id
     .eq('id', id);
 
   if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+
+  const pushTitle = action === 'approve' ? 'Refund Disetujui' : 'Refund Ditolak';
+  const pushBody =
+    action === 'approve'
+      ? `Refund Rp ${refund.amount_idr.toLocaleString('id-ID')} telah disetujui dan akan segera diproses.`
+      : `Permintaan refund Rp ${refund.amount_idr.toLocaleString('id-ID')} ditolak. Hubungi admin untuk informasi lebih lanjut.`;
+  sendPushToUser(refund.user_id, pushTitle, pushBody, {
+    type: 'credit_refund_processed',
+    action,
+    amountIdr: refund.amount_idr,
+  }).catch(() => {});
+
   return NextResponse.json({ ok: true });
 }

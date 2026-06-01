@@ -10,7 +10,10 @@ export async function middleware(req: NextRequest) {
     return NextResponse.next();
   }
 
-  const token = req.cookies.get(SESSION_COOKIE)?.value ?? '';
+  const token =
+    req.cookies.get(SESSION_COOKIE)?.value ??
+    req.headers.get('authorization')?.replace(/^Bearer\s+/i, '') ??
+    '';
   const valid = await verifySessionToken(token);
 
   if (!valid) {
