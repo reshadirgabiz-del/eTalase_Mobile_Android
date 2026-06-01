@@ -32,6 +32,22 @@ type RefundRequest = {
   created_at: string;
 };
 
+type CreditBalance = {
+  user_id: string;
+  balance_idr: number;
+  updated_at: string;
+};
+
+type CreditTransaction = {
+  id: string;
+  user_id: string;
+  amount_idr: number;
+  type: string;
+  description: string;
+  reference_id: string | null;
+  created_at: string;
+};
+
 function CopyText({ value }: { value: string }) {
   return (
     <Group gap={4} wrap="nowrap">
@@ -52,7 +68,11 @@ function CopyText({ value }: { value: string }) {
 export default function CreditsPage() {
   const [topups, setTopups] = useState<TopupRequest[]>([]);
   const [refunds, setRefunds] = useState<RefundRequest[]>([]);
+  const [balances, setBalances] = useState<CreditBalance[]>([]);
+  const [transactions, setTransactions] = useState<CreditTransaction[]>([]);
   const [loading, setLoading] = useState(true);
+  const [balancesLoading, setBalancesLoading] = useState(false);
+  const [transactionsLoading, setTransactionsLoading] = useState(false);
   const [confirming, setConfirming] = useState<string | null>(null);
   const [processing, setProcessing] = useState<string | null>(null);
 
@@ -65,6 +85,28 @@ export default function CreditsPage() {
       setRefunds(data.refunds ?? []);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fetchBalances() {
+    setBalancesLoading(true);
+    try {
+      const r = await fetch('/api/credits/balances');
+      const data = await r.json();
+      setBalances(data.balances ?? []);
+    } finally {
+      setBalancesLoading(false);
+    }
+  }
+
+  async function fetchTransactions() {
+    setTransactionsLoading(true);
+    try {
+      const r = await fetch('/api/credits/transactions');
+      const data = await r.json();
+      setTransactions(data.transactions ?? []);
+    } finally {
+      setTransactionsLoading(false);
     }
   }
 
@@ -128,7 +170,10 @@ export default function CreditsPage() {
     <Stack gap="xl">
       <Title order={3}>Credits</Title>
 
-      <Tabs defaultValue="topups">
+      <Tabs defaultValue="topups" onChange={(v) => {
+        if (v === 'balances' && balances.length === 0) fetchBalances();
+        if (v === 'transactions' && transactions.length === 0) fetchTransactions();
+      }}>
         <Tabs.List>
           <Tabs.Tab value="topups">
             Pending Topups {topups.length > 0 && <Badge size="xs" ml={4} color="yellow">{topups.length}</Badge>}
@@ -136,6 +181,8 @@ export default function CreditsPage() {
           <Tabs.Tab value="refunds">
             Pending Refunds {refunds.length > 0 && <Badge size="xs" ml={4} color="red">{refunds.length}</Badge>}
           </Tabs.Tab>
+          <Tabs.Tab value="balances">User Balances</Tabs.Tab>
+          <Tabs.Tab value="transactions">Transactions</Tabs.Tab>
         </Tabs.List>
 
         <Tabs.Panel value="topups" pt="md">
@@ -224,6 +271,72 @@ export default function CreditsPage() {
                 </Paper>
               ))}
             </Stack>
+          )}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="balances" pt="md">
+          {balancesLoading ? (
+            <Loader />
+          ) : balances.length === 0 ? (
+            <Text c="dimmed" size="sm">No balance records found.</Text>
+          ) : (
+            <Table striped withColumnBorders>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>User ID</Table.Th>
+                  <Table.Th>Balance</Table.Th>
+                  <Table.Th>Last Updated</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {balances.map((b) => (
+                  <Table.Tr key={b.user_id}>
+                    <Table.Td><CopyText value={b.user_id} /></Table.Td>
+                    <Table.Td><Text fw={600}>{formatIDR(b.balance_idr)}</Text></Table.Td>
+                    <Table.Td><Text size="sm">{formatDate(b.updated_at)}</Text></Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
+          )}
+        </Tabs.Panel>
+
+        <Tabs.Panel value="transactions" pt="md">
+          {transactionsLoading ? (
+            <Loader />
+          ) : transactions.length === 0 ? (
+            <Text c="dimmed" size="sm">No transactions found.</Text>
+          ) : (
+            <Table striped withColumnBorders>
+              <Table.Thead>
+                <Table.Tr>
+                  <Table.Th>User ID</Table.Th>
+                  <Table.Th>Amount</Table.Th>
+                  <Table.Th>Type</Table.Th>
+                  <Table.Th>Description</Table.Th>
+                  <Table.Th>Date</Table.Th>
+                </Table.Tr>
+              </Table.Thead>
+              <Table.Tbody>
+                {transactions.map((tx) => (
+                  <Table.Tr key={tx.id}>
+                    <Table.Td><CopyText value={tx.user_id} /></Table.Td>
+                    <Table.Td>
+                      <Text fw={600} c={tx.amount_idr >= 0 ? 'green' : 'red'}>
+                        {tx.amount_idr >= 0 ? '+' : ''}{formatIDR(tx.amount_idr)}
+                      </Text>
+                    </Table.Td>
+                    <Table.Td>
+                      <Badge variant="light" color={tx.type === 'topup' ? 'green' : tx.type === 'deduction' ? 'red' : 'blue'}>
+                        {tx.type}
+                      </Badge>
+                    </Table.Td>
+                    <Table.Td><Text size="sm">{tx.description}</Text></Table.Td>
+                    <Table.Td><Text size="sm">{formatDate(tx.created_at)}</Text></Table.Td>
+                  </Table.Tr>
+                ))}
+              </Table.Tbody>
+            </Table>
           )}
         </Tabs.Panel>
       </Tabs>
