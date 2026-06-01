@@ -12,6 +12,7 @@ import type { Plan, PlanVoucher } from '@/types';
 import { formatDate, formatIDR } from '@/lib/utils';
 
 const PLAN_COLORS: Record<Plan, string> = {
+  free: 'lime',
   starter: 'gray',
   growth: 'teal',
   business: 'blue',
@@ -30,6 +31,7 @@ export default function VouchersPage() {
     maxUsages: '',
     expires: '',
     applicablePlan: null as Plan | null,
+    applicableBillingCycle: null as 'monthly' | 'annual' | null,
   });
 
   const fetchData = async () => {
@@ -86,6 +88,7 @@ export default function VouchersPage() {
           maxUsages: form.maxUsages ? Number(form.maxUsages) : undefined,
           expires: form.expires || undefined,
           applicablePlan: form.applicablePlan ?? undefined,
+          applicableBillingCycle: form.applicableBillingCycle ?? undefined,
         }),
       });
       const result = await r.json();
@@ -95,7 +98,7 @@ export default function VouchersPage() {
       }
       notifications.show({ color: 'green', message: `Voucher ${result.code} created` });
       setCreateOpen(false);
-      setForm({ code: '', type: 'percent', value: 10, maxUsages: '', expires: '', applicablePlan: null });
+      setForm({ code: '', type: 'percent', value: 10, maxUsages: '', expires: '', applicablePlan: null, applicableBillingCycle: null });
       fetchData();
     } finally {
       setCreating(false);
@@ -121,6 +124,7 @@ export default function VouchersPage() {
                 <Table.Th>Code</Table.Th>
                 <Table.Th>Discount</Table.Th>
                 <Table.Th>Plan</Table.Th>
+                <Table.Th>Billing Cycle</Table.Th>
                 <Table.Th>Used / Max</Table.Th>
                 <Table.Th>Expires</Table.Th>
                 <Table.Th>Status</Table.Th>
@@ -131,7 +135,7 @@ export default function VouchersPage() {
             <Table.Tbody>
               {data.length === 0 ? (
                 <Table.Tr>
-                  <Table.Td colSpan={8}>
+                  <Table.Td colSpan={9}>
                     <Text c="dimmed" ta="center" py="md">
                       No vouchers found
                     </Text>
@@ -159,6 +163,15 @@ export default function VouchersPage() {
                         </Badge>
                       ) : (
                         <Text size="xs" c="dimmed">All plans</Text>
+                      )}
+                    </Table.Td>
+                    <Table.Td>
+                      {v.applicable_billing_cycle ? (
+                        <Badge color="indigo" variant="light" tt="capitalize">
+                          {v.applicable_billing_cycle}
+                        </Badge>
+                      ) : (
+                        <Text size="xs" c="dimmed">All cycles</Text>
                       )}
                     </Table.Td>
                     <Table.Td>
@@ -239,6 +252,7 @@ export default function VouchersPage() {
             label="Applicable Plan"
             description="Leave blank to apply to all plans"
             data={[
+              { value: 'free', label: 'Free' },
               { value: 'starter', label: 'Starter' },
               { value: 'growth', label: 'Growth' },
               { value: 'business', label: 'Business' },
@@ -248,6 +262,18 @@ export default function VouchersPage() {
             onChange={(v) => setForm((f) => ({ ...f, applicablePlan: (v as Plan | null) }))}
             clearable
             placeholder="All plans"
+          />
+          <Select
+            label="Applicable Billing Cycle"
+            description="Leave blank to apply to all billing cycles"
+            data={[
+              { value: 'monthly', label: 'Monthly' },
+              { value: 'annual', label: 'Annual' },
+            ]}
+            value={form.applicableBillingCycle}
+            onChange={(v) => setForm((f) => ({ ...f, applicableBillingCycle: (v as 'monthly' | 'annual' | null) }))}
+            clearable
+            placeholder="All cycles"
           />
           <TextInput
             label="Max Usages"
