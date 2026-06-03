@@ -3,6 +3,10 @@ Backend/
 Frontend/
 Mobile/
 
+# Admin app — lives in sibling Jastip Admin/ folder, not tracked here
+Admin/
+Admin Mobile/
+
 # Dependencies
 node_modules/
 
