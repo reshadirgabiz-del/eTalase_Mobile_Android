@@ -9,21 +9,25 @@ Framework: Indonesian law (UU ITE, UU PDP) + GDPR (EU 2016/679)
 ## What the documents cover
 
 ### Terms of Use (`/legal/terms`)
+Effective date updated to **1 Juni 2026**. Total sections: 15.
+
 | # | Section | Status |
 |---|---------|--------|
 | 1 | Acceptance of terms | ✅ Written |
-| 2 | Service description (SaaS jastip platform) | ✅ Written |
+| 2 | Service description — platform as tool, not party to transactions | ✅ Written |
 | 3 | Eligibility & account registration | ✅ Written |
-| 4 | User rights & obligations (inc. UU ITE reference) | ✅ Written |
-| 5 | Subscription & payment terms (trial, billing, cancellation, refund) | ✅ Written |
-| 6 | Content ownership & IP | ✅ Written |
-| 7 | Third-party services disclaimer | ✅ Written |
-| 8 | Limitation of liability | ✅ Written |
-| 9 | Indemnification | ✅ Written |
-| 10 | Termination (by user & by platform) | ✅ Written |
-| 11 | Governing law (Indonesian courts, Jakarta Selatan) | ✅ Written |
-| 12 | Changes to terms (14-day notice) | ✅ Written |
-| 13 | Contact | ✅ Written |
+| 4 | User rights & obligations (UU ITE, UU PDP, UU PPTPPU references) | ✅ Written |
+| 5 | **Merchant obligations & prohibited products** — prohibited list, right to remove/block on any report | ✅ Written |
+| 6 | **Fraud, scam & money laundering prevention** — AML, structuring, PPATK reporting rights | ✅ Written |
+| 7 | Subscription & payment terms (trial, billing, cancellation, refund) | ✅ Written |
+| 8 | Content ownership & IP | ✅ Written |
+| 9 | **Third-party services** — Midtrans, bank transfer, Biteship/courier explicitly disclaimed | ✅ Written |
+| 10 | **Limitation of liability** — merchant-customer disputes, fraud by merchants, 3rd party failures | ✅ Written |
+| 11 | **Indemnification** — merchant-specific; covers merchant fraud toward customers | ✅ Written |
+| 12 | **Termination & content moderation rights** — right to act on any report, no prior notice required | ✅ Written |
+| 13 | Governing law (Indonesian courts, Jakarta Selatan) | ✅ Written |
+| 14 | Changes to terms (14-day notice) | ✅ Written |
+| 15 | Contact (incl. abuse reporting channel) | ✅ Written |
 
 ### Privacy Policy (`/legal/privacy`) — GDPR framework
 | # | Section | GDPR Article | Status |
