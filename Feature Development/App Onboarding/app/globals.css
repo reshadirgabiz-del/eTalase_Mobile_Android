@@ -1,0 +1,75 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --paper: #f4ede0;
+  --card: #fbf6ec;
+  --chrome: #efe7d6;
+  --ink: #1c1a14;
+  --muted: #6e6757;
+  --line: rgba(28, 26, 20, 0.12);
+  --sage: #5d6b40;
+  --terra: #b65a30;
+  --butter: #e8b85a;
+  --rose: #c97e6e;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; height: 100%; }
+body { background: #211e18; -webkit-font-smoothing: antialiased; }
+
+.font-display { font-family: var(--font-serif), 'Instrument Serif', Georgia, serif; }
+.font-code    { font-family: var(--font-mono), 'JetBrains Mono', ui-monospace, monospace; }
+
+.ob-stage {
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: radial-gradient(120% 80% at 50% 0%, #2b271f 0%, #1c1914 70%);
+}
+.ob-device {
+  position: relative;
+  width: min(100vw, 440px);
+  height: 100dvh;
+  max-height: 960px;
+  overflow: hidden;
+  background: var(--paper);
+  box-shadow: 0 40px 120px -40px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 640px) {
+  .ob-stage {
+    background-color: var(--paper);
+    background-image: linear-gradient(rgba(0,0,0,0.3), rgba(0,0,0,0.3));
+  }
+  .ob-device {
+    width: 480px;
+    height: min(94dvh, 920px);
+    border-radius: 44px;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.10),
+      0 32px 80px -16px rgba(0,0,0,0.35),
+      0 80px 180px -40px rgba(0,0,0,0.25);
+  }
+}
+
+@keyframes slideIn {
+  from { opacity: 0; transform: translateY(18px); }
+  to   { opacity: 1; transform: none; }
+}
+.anim { animation: slideIn 0.48s cubic-bezier(0.2, 0.7, 0.2, 1) both; }
+.anim.d1 { animation-delay: 0.06s; }
+.anim.d2 { animation-delay: 0.13s; }
+.anim.d3 { animation-delay: 0.20s; }
+.anim.d4 { animation-delay: 0.27s; }
+.anim.d5 { animation-delay: 0.34s; }
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.line-appear { animation: fadeIn 0.45s ease both; }

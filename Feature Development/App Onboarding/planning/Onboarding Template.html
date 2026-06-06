@@ -1,0 +1,603 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<title>Jastip Live · Onboarding</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet" />
+<style>
+  :root{
+    --paper:#f4ede0; --card:#fbf6ec; --chrome:#efe7d6;
+    --ink:#1c1a14; --muted:#6e6757; --line:rgba(28,26,20,0.12);
+    --sage:#5d6b40; --terra:#b65a30; --butter:#e8b85a; --rose:#c97e6e;
+    --serif:'Instrument Serif',Georgia,serif;
+    --sans:'Geist',ui-sans-serif,system-ui,sans-serif;
+    --mono:'JetBrains Mono',ui-monospace,monospace;
+  }
+  *{ box-sizing:border-box; }
+  html,body{ margin:0; padding:0; height:100%; }
+  body{
+    font-family:var(--sans);
+    color:var(--ink);
+    background:#211e18;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+  }
+  button{ font-family:inherit; color:inherit; }
+
+  /* Stage: dark backdrop, center the mobile screen (full-bleed inside) */
+  .ob-stage{
+    min-height:100dvh;
+    display:flex; align-items:center; justify-content:center;
+    background:
+      radial-gradient(120% 80% at 50% 0%, #2b271f 0%, #1c1914 70%);
+    padding:0;
+  }
+  .ob-device{
+    position:relative;
+    width:min(100vw, 440px);
+    height:100dvh;
+    max-height:960px;
+    overflow:hidden;
+    background:var(--paper);
+    box-shadow:0 40px 120px -40px rgba(0,0,0,.7);
+    touch-action:pan-y;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  @media (min-width:480px){
+    .ob-device{ border-radius:0; }
+  }
+
+  .ob-track{
+    display:flex;
+    height:100%;
+    will-change:transform;
+  }
+  .ob-slide{
+    flex:0 0 100%;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+    padding:max(22px, env(safe-area-inset-top)) 26px max(26px, env(safe-area-inset-bottom));
+  }
+
+  /* Top bar */
+  .ob-top{
+    display:flex; align-items:center; justify-content:space-between;
+    flex:none; margin-bottom:auto;
+  }
+  .ob-brand{
+    display:flex; align-items:center; gap:7px;
+    font-family:var(--mono); font-size:10px; letter-spacing:.22em;
+  }
+  .ob-brand .mark{
+    width:13px; height:13px; border-radius:50%;
+    border:2px solid currentColor; position:relative; flex:none;
+  }
+  .ob-brand .mark::after{
+    content:""; position:absolute; inset:25%; border-radius:50%; background:currentColor;
+  }
+  .ob-dots{ display:flex; gap:7px; align-items:center; }
+  .ob-dot{ width:6px; height:6px; border-radius:999px; transition:all .35s ease; }
+
+  /* Shared content blocks */
+  .ob-body{
+    display:flex; flex-direction:column;
+    flex:1; min-height:0; justify-content:flex-end;
+    padding-top:34px;
+  }
+  .ob-kicker{
+    font-family:var(--mono); font-size:11px; letter-spacing:.16em;
+    margin-bottom:18px; text-transform:uppercase;
+  }
+  .ob-q{
+    font-family:var(--serif); font-weight:400;
+    font-size:clamp(30px,8.5vw,40px); line-height:1.04;
+    letter-spacing:-.01em; margin:0 0 26px;
+    text-wrap:balance;
+  }
+  .ob-opts{ display:flex; flex-direction:column; gap:10px; }
+
+  /* Option base */
+  .opt{
+    appearance:none; border:none; background:none; cursor:pointer;
+    text-align:left; width:100%; transition:transform .12s ease, background .2s ease, color .2s ease, border-color .2s ease;
+  }
+  .opt:active{ transform:scale(.985); }
+  .opt-letter{
+    font-family:var(--mono); font-size:11px; opacity:.55;
+    width:16px; flex:none;
+  }
+  .check{ width:18px; height:18px; flex:none; opacity:0; transition:opacity .2s ease; }
+  .opt.sel .check{ opacity:1; }
+
+  /* A — editorial stacked pills */
+  .a-opt{
+    display:flex; align-items:center; gap:12px;
+    padding:15px 18px; border-radius:999px;
+    border:1.5px solid var(--line);
+    font-size:15px;
+  }
+  .a-opt .lbl{ flex:1; }
+
+  /* B — block grid cards */
+  .b-grid{ display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+  .b-opt{
+    display:flex; flex-direction:column; gap:5px;
+    padding:15px 15px 16px; border-radius:16px; min-height:84px;
+    justify-content:flex-end;
+    border:1.5px solid rgba(244,237,224,.26);
+    background:rgba(244,237,224,.10);
+    font-size:15px;
+  }
+  .b-opt .sub{ font-size:11.5px; font-family:var(--mono); opacity:.7; letter-spacing:.02em; }
+  .b-opt .num{ font-family:var(--mono); font-size:10px; letter-spacing:.14em; opacity:.6; }
+
+  /* C — visual band + wrap chips */
+  .c-viz{
+    flex:1; min-height:120px; border-radius:18px; margin-bottom:22px;
+    position:relative; overflow:hidden; border:1px solid var(--line);
+    display:flex; align-items:flex-end; padding:14px;
+  }
+  .c-viz .stripe{
+    position:absolute; inset:0;
+    background:repeating-linear-gradient(135deg, transparent 0 13px, color-mix(in oklch, var(--butter) 55%, transparent) 13px 14px),
+               color-mix(in oklch, var(--butter) 24%, var(--paper));
+  }
+  .c-viz .vlabel{
+    position:relative; font-family:var(--mono); font-size:10px; letter-spacing:.14em; white-space:nowrap;
+    background:var(--ink); color:var(--paper); padding:5px 10px; border-radius:999px;
+  }
+  .c-chips{ display:flex; flex-wrap:wrap; gap:9px; }
+  .c-opt{
+    padding:11px 17px; border-radius:999px; font-size:14px;
+    border:1.5px solid var(--line);
+  }
+
+  /* D — conversation */
+  .d-msg{ display:flex; gap:10px; align-items:flex-start; margin-bottom:6px; }
+  .d-av{
+    width:30px; height:30px; border-radius:50%; flex:none;
+    border:1.5px solid var(--rose); position:relative; background:color-mix(in oklch, var(--rose) 16%, var(--card));
+  }
+  .d-av::after{ content:""; position:absolute; inset:30%; border-radius:50%; background:var(--rose); }
+  .d-bubble{
+    background:var(--paper); border:1px solid var(--line);
+    border-radius:6px 18px 18px 18px; padding:14px 16px;
+    font-family:var(--serif); font-size:23px; line-height:1.12; letter-spacing:-.01em;
+    max-width:88%;
+  }
+  .d-replies{ display:flex; flex-direction:column; align-items:flex-end; gap:9px; margin-top:18px; }
+  .d-opt{
+    padding:11px 17px; border-radius:18px 18px 6px 18px; font-size:14.5px;
+    border:1.5px solid var(--rose); color:var(--rose); background:transparent;
+    max-width:86%;
+  }
+
+  /* E — dark list rows */
+  .e-list{ display:flex; flex-direction:column; }
+  .e-opt{
+    display:flex; align-items:center; gap:16px;
+    padding:17px 2px; border-top:1px solid rgba(244,237,224,.14);
+  }
+  .e-opt:last-child{ border-bottom:1px solid rgba(244,237,224,.14); }
+  .e-opt .enum{ font-family:var(--mono); font-size:12px; opacity:.5; width:22px; }
+  .e-opt .elbl{ flex:1; font-family:var(--serif); font-size:22px; line-height:1.05; }
+  .e-opt .echev{ opacity:.4; transition:opacity .2s, transform .2s; }
+
+  /* entrance — first page-load only (body.intro); navigation does not re-trigger,
+     so swiped slides never blink. Base .anim is fully visible (opacity:1). */
+  @media (prefers-reduced-motion: no-preference){
+    body.intro .ob-slide.is-active .anim{ animation:obIn .55s cubic-bezier(.2,.7,.2,1) both; }
+    body.intro .ob-slide.is-active .anim.d1{ animation-delay:.05s; }
+    body.intro .ob-slide.is-active .anim.d2{ animation-delay:.11s; }
+    body.intro .ob-slide.is-active .anim.d3{ animation-delay:.17s; }
+  }
+  @keyframes obIn{ from{ opacity:0; transform:translateY(16px); } to{ opacity:1; transform:none; } }
+
+  .hint{
+    position:fixed; left:50%; bottom:14px; transform:translateX(-50%);
+    font-family:var(--mono); font-size:10px; letter-spacing:.16em;
+    color:rgba(244,237,224,.4); pointer-events:none; z-index:20;
+    transition:opacity .5s ease;
+  }
+  @media (max-width:479px){ .hint{ display:none; } }
+</style>
+</head>
+<body>
+<div id="root"></div>
+<div class="hint" id="hint">← GESER / SWIPE →</div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel">
+const { useState, useEffect, useRef, useCallback } = React;
+
+/* ──────────────────────────────────────────────────────────────
+   EDIT YOUR QUESTIONS HERE
+   ──────────────────────────────────────────────────────────────
+   • Each item is one screen. The "design" cycles automatically:
+     screen 1 → design A, 2 → B, 3 → C, 4 → D, 5 → E, 6 → A again …
+     so the look loops forever (5th/6th screen repeats the first design).
+   • Add or remove items freely — designs keep cycling, dots auto-update.
+   • Every screen uses the same simple shape:
+       kicker   – tiny mono label above the question
+       q        – the question text
+       options  – tappable answers  { label, sub? }
+                  (sub is shown on the grid + chat designs; optional)
+─────────────────────────────────────────────────────────────── */
+const QUESTIONS = [
+  {
+    id: 'channel',
+    kicker: 'Tentang kamu',
+    q: 'Kamu jualan paling sering lewat mana?',
+    options: [
+      { label: 'Instagram Live', sub: 'IG' },
+      { label: 'TikTok Shop',    sub: 'TT' },
+      { label: 'WhatsApp',       sub: 'WA' },
+      { label: 'Marketplace',    sub: 'MP' },
+    ],
+  },
+  {
+    id: 'volume',
+    kicker: 'Skala toko',
+    q: 'Berapa pesanan masuk tiap kali live?',
+    options: [
+      { label: 'Di bawah 10', sub: 'baru mulai' },
+      { label: '10 – 50',     sub: 'rutin' },
+      { label: '50 – 100',    sub: 'rame' },
+      { label: '100+',        sub: 'gas terus' },
+    ],
+  },
+  {
+    id: 'pain',
+    kicker: 'Yang bikin pusing',
+    q: 'Apa bagian jualan yang paling melelahkan?',
+    options: [
+      { label: 'Catat pesanan' },
+      { label: 'Balas chat' },
+      { label: 'Hitung tagihan' },
+      { label: 'Atur stok' },
+    ],
+  },
+  {
+    id: 'tools',
+    kicker: 'Cara lama',
+    q: 'Sekarang kamu catat pesanan pakai apa?',
+    options: [
+      { label: 'Notes di HP',  sub: 'sering ke-skip' },
+      { label: 'Buku tulis',   sub: 'pegel' },
+      { label: 'Spreadsheet',  sub: 'lumayan' },
+      { label: 'Diingat aja',  sub: 'doa-doa' },
+    ],
+  },
+  {
+    id: 'dream',
+    kicker: 'Kalau semua otomatis',
+    q: 'Waktu luangmu mau dipakai buat apa?',
+    options: [
+      { label: 'Tidur cukup' },
+      { label: 'Main sama anak' },
+      { label: 'Nambah produk' },
+      { label: 'Scaling toko' },
+    ],
+  },
+];
+
+/* Design rotation + per-design theme */
+const DESIGNS = ['editorial', 'block', 'visual', 'chat', 'list'];
+const THEMES = {
+  editorial: { bg:'var(--paper)', fg:'var(--ink)',   sub:'var(--muted)',          accent:'var(--sage)',   on:'var(--paper)', dark:false },
+  block:     { bg:'var(--terra)', fg:'var(--paper)',  sub:'rgba(244,237,224,.72)', accent:'var(--paper)',  on:'var(--terra)', dark:true  },
+  visual:    { bg:'var(--paper)', fg:'var(--ink)',    sub:'var(--muted)',          accent:'var(--ink)',    on:'var(--paper)', dark:false },
+  chat:      { bg:'var(--card)',  fg:'var(--ink)',    sub:'var(--muted)',          accent:'var(--rose)',   on:'var(--paper)', dark:false },
+  list:      { bg:'var(--ink)',   fg:'var(--paper)',  sub:'rgba(244,237,224,.6)',  accent:'var(--butter)', on:'var(--ink)',   dark:true  },
+};
+const LETTERS = ['a','b','c','d','e','f'];
+
+const Check = ({ color }) => (
+  <svg className="check" viewBox="0 0 20 20" fill="none">
+    <circle cx="10" cy="10" r="9" fill={color} />
+    <path d="M5.8 10.4l2.6 2.6 5.4-5.6" stroke="var(--paper)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+  </svg>
+);
+
+function Dots({ count, active, theme }) {
+  const base = theme.dark ? 'rgba(244,237,224,' : 'rgba(28,26,20,';
+  return (
+    <div className="ob-dots">
+      {Array.from({ length: count }).map((_, i) => (
+        <span key={i} className="ob-dot" style={{
+          width: i === active ? 18 : 6,
+          background: i === active ? theme.fg : base + '.28)',
+        }} />
+      ))}
+    </div>
+  );
+}
+
+function TopBar({ theme, count, active }) {
+  return (
+    <div className="ob-top" style={{ color: theme.fg }}>
+      <div className="ob-brand"><span className="mark" />JASTIP&nbsp;LIVE</div>
+      <Dots count={count} active={active} theme={theme} />
+    </div>
+  );
+}
+
+/* ── The five designs ─────────────────────────────────────── */
+function Options({ kind, q, theme, selected, onPick }) {
+  const sel = (i) => selected === i;
+
+  if (kind === 'block') {
+    return (
+      <div className="b-grid anim d2">
+        {q.options.map((o, i) => (
+          <button key={i} className={'opt b-opt' + (sel(i) ? ' sel' : '')} onClick={() => onPick(i)}
+            style={ sel(i)
+              ? { background:'var(--paper)', color:'var(--terra)', borderColor:'var(--paper)' }
+              : { color:'var(--paper)' } }>
+            <span className="num">{String(i + 1).padStart(2,'0')}</span>
+            <span className="lbl">{o.label}</span>
+            {o.sub && <span className="sub" style={ sel(i) ? { color:'var(--terra)', opacity:.7 } : null }>{o.sub}</span>}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  if (kind === 'visual') {
+    return (
+      <div className="c-chips anim d2">
+        {q.options.map((o, i) => (
+          <button key={i} className={'opt c-opt' + (sel(i) ? ' sel' : '')} onClick={() => onPick(i)}
+            style={ sel(i)
+              ? { background:'var(--ink)', color:'var(--paper)', borderColor:'var(--ink)' }
+              : null }>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  if (kind === 'chat') {
+    return (
+      <div className="d-replies anim d2">
+        {q.options.map((o, i) => (
+          <button key={i} className={'opt d-opt' + (sel(i) ? ' sel' : '')} onClick={() => onPick(i)}
+            style={ sel(i)
+              ? { background:'var(--rose)', color:'var(--paper)' }
+              : null }>
+            {o.label}
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  if (kind === 'list') {
+    return (
+      <div className="e-list anim d2">
+        {q.options.map((o, i) => (
+          <button key={i} className={'opt e-opt' + (sel(i) ? ' sel' : '')} onClick={() => onPick(i)}
+            style={ sel(i) ? { color:'var(--butter)' } : { color:'var(--paper)' } }>
+            <span className="enum" style={ sel(i) ? { color:'var(--butter)', opacity:1 } : null }>{String(i + 1).padStart(2,'0')}</span>
+            <span className="elbl">{o.label}</span>
+            <svg className="echev" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"
+              style={ sel(i) ? { opacity:1, transform:'translateX(2px)' } : null }>
+              <path d="M9 6l6 6-6 6" strokeLinecap="round" strokeLinejoin="round" />
+            </svg>
+          </button>
+        ))}
+      </div>
+    );
+  }
+
+  /* editorial (default) */
+  return (
+    <div className="ob-opts anim d2">
+      {q.options.map((o, i) => (
+        <button key={i} className={'opt a-opt' + (sel(i) ? ' sel' : '')} onClick={() => onPick(i)}
+          style={ sel(i)
+            ? { background:'var(--sage)', color:'var(--paper)', borderColor:'var(--sage)' }
+            : null }>
+          <span className="opt-letter" style={ sel(i) ? { opacity:.85, color:'var(--paper)' } : null }>{LETTERS[i]}</span>
+          <span className="lbl">{o.label}</span>
+          <Check color="var(--paper)" />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+function Slide({ q, kind, theme, qIndex, count, isActive, selected, onPick }) {
+  const kicker = `${String(qIndex + 1).padStart(2,'0')} · ${q.kicker || ''}`.trim();
+
+  // chat design renders the question inside a bubble, not as <h2>
+  const showHeading = kind !== 'chat';
+
+  return (
+    <div className={'ob-slide' + (isActive ? ' is-active' : '')} style={{ background: theme.bg, color: theme.fg }}>
+      <TopBar theme={theme} count={count} active={qIndex} />
+
+      <div className="ob-body">
+        {kind === 'visual' && (
+          <div className="c-viz anim" style={{ color: theme.fg }}>
+            <span className="stripe" />
+            <span className="vlabel">FOTO / ILUSTRASI</span>
+          </div>
+        )}
+
+        <div className="ob-kicker anim d1" style={{ color: theme.accent }}>{kicker}</div>
+
+        {kind === 'chat' ? (
+          <div className="d-msg anim d1">
+            <span className="d-av" />
+            <div className="d-bubble">{q.q}</div>
+          </div>
+        ) : showHeading && (
+          <h2 className="ob-q anim d1">{q.q}</h2>
+        )}
+
+        <Options kind={kind} q={q} theme={theme} selected={selected} onPick={onPick} />
+      </div>
+    </div>
+  );
+}
+
+/* ── Infinite, drag-able carousel ─────────────────────────── */
+const LS_IDX = 'jl_ob_index';
+const LS_ANS = 'jl_ob_answers';
+
+const EASE = 'transform .44s cubic-bezier(.22,.61,.36,1)';
+
+function App() {
+  const N = QUESTIONS.length;
+  const deviceRef = useRef(null);
+  const trackRef = useRef(null);
+
+  // Position is driven IMPERATIVELY (refs + direct style) so React re-renders
+  // never fight the CSS transition. React only renders slide content + dots.
+  const idx = useRef(1);          // extended index: 0=clone(last) · 1..N=real · N+1=clone(first)
+  const widthRef = useRef(0);
+  const drag = useRef({ x: 0, base: 0, active: false, moved: false });
+
+  const [activeReal, setActiveReal] = useState(0);
+  const [answers, setAnswers] = useState(() => {
+    try { return JSON.parse(localStorage.getItem(LS_ANS)) || {}; } catch (e) { return {}; }
+  });
+
+  // Write the current index to the DOM. animated=false snaps with no transition.
+  const paint = (animated) => {
+    const t = trackRef.current;
+    if (!t) return;
+    t.style.transition = animated ? EASE : 'none';
+    t.style.transform = `translate3d(${-idx.current * widthRef.current}px,0,0)`;
+  };
+
+  const syncReal = () => {
+    const r = ((idx.current - 1) % N + N) % N;
+    setActiveReal(r);
+    try { localStorage.setItem(LS_IDX, String(r)); } catch (e) {}
+  };
+
+  const measure = () => {
+    const el = deviceRef.current;
+    if (!el) return;
+    widthRef.current = el.clientWidth;
+    if (!drag.current.active) paint(false);
+  };
+
+  // init: restore position, measure, observe resize
+  useEffect(() => {
+    document.body.classList.add('intro');
+    const introT = setTimeout(() => document.body.classList.remove('intro'), 1400);
+    const r = parseInt(localStorage.getItem(LS_IDX), 10);
+    if (!isNaN(r) && r >= 0 && r < N) idx.current = r + 1;
+    measure();
+    syncReal();
+    const ro = new ResizeObserver(measure);
+    ro.observe(deviceRef.current);
+    return () => { ro.disconnect(); clearTimeout(introT); };
+  }, []);
+
+  // When sitting on a clone, snap instantly to its real twin (seamless wrap).
+  const normalizeClone = () => {
+    if (idx.current === 0) { idx.current = N; paint(false); }
+    else if (idx.current === N + 1) { idx.current = 1; paint(false); }
+  };
+  // Fire on transitionend AND on a timer fallback, so the loop never depends
+  // on a single event that a browser might drop.
+  const onTransitionEnd = (e) => { if (e.propertyName === 'transform') normalizeClone(); };
+
+  const go = (dir) => {
+    // if we're parked on a clone, snap to its real twin first (invisible — same
+    // design), so every step departs from a real slide and never stalls.
+    if (idx.current === 0) { idx.current = N; paint(false); }
+    else if (idx.current === N + 1) { idx.current = 1; paint(false); }
+    idx.current += dir;
+    paint(true);
+    syncReal();
+    if (idx.current === 0 || idx.current === N + 1) setTimeout(normalizeClone, 480);
+    const h = document.getElementById('hint');
+    if (h) h.style.opacity = '0';
+  };
+
+  const pick = (qid, oi) => {
+    setAnswers((a) => {
+      const n = { ...a, [qid]: oi };
+      try { localStorage.setItem(LS_ANS, JSON.stringify(n)); } catch (e) {}
+      return n;
+    });
+    setTimeout(() => go(1), 260);   // advance after the selection reads
+  };
+
+  // pointer / drag — track follows the finger, snaps on release
+  const down = (e) => {
+    drag.current = { x: e.clientX, base: -idx.current * widthRef.current, active: true, moved: false };
+    if (trackRef.current) trackRef.current.style.transition = 'none';
+  };
+  const move = (e) => {
+    const d = drag.current;
+    if (!d.active) return;
+    const dx = e.clientX - d.x;
+    if (Math.abs(dx) > 6) d.moved = true;
+    if (trackRef.current) trackRef.current.style.transform = `translate3d(${d.base + dx}px,0,0)`;
+  };
+  const up = (e) => {
+    const d = drag.current;
+    if (!d.active) return;
+    d.active = false;
+    const dx = e.clientX - d.x;
+    const th = Math.max(56, widthRef.current * 0.16);
+    if (dx <= -th) go(1);
+    else if (dx >= th) go(-1);
+    else paint(true);   // snap back
+  };
+
+  // keyboard (desktop testing)
+  useEffect(() => {
+    const onKey = (e) => {
+      if (e.key === 'ArrowRight') go(1);
+      if (e.key === 'ArrowLeft') go(-1);
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  const slides = [QUESTIONS[N - 1], ...QUESTIONS, QUESTIONS[0]];
+
+  return (
+    <div className="ob-stage">
+      <div className="ob-device" ref={deviceRef}
+        onPointerDown={down} onPointerMove={move} onPointerUp={up}
+        onPointerLeave={up} onPointerCancel={up}>
+        <div className="ob-track" ref={trackRef} onTransitionEnd={onTransitionEnd}>
+          {slides.map((q, p) => {
+            const qIndex = ((p - 1) % N + N) % N;          // extended position → real question
+            const kind = DESIGNS[qIndex % DESIGNS.length];
+            const theme = THEMES[kind];
+            return (
+              <Slide key={p} q={q} kind={kind} theme={theme}
+                qIndex={qIndex} count={N}
+                isActive={qIndex === activeReal}
+                selected={answers[q.id]}
+                onPick={(oi) => pick(q.id, oi)} />
+            );
+          })}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+</body>
+</html>
