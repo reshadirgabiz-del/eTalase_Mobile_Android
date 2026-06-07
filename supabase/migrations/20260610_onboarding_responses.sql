@@ -1,5 +1,5 @@
 -- Onboarding survey responses — one row per user (upsert on replay)
-CREATE TABLE onboarding_responses (
+CREATE TABLE IF NOT EXISTS onboarding_responses (
   id               uuid        PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id          text        NOT NULL UNIQUE,
 
