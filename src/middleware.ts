@@ -5,7 +5,6 @@ const PUBLIC = [
   '/login',
   '/api/auth/login',
   '/api/auth/logout',
-  '/api/onboarding',
   '/api/credits/topup-requests/notify',
   '/api/credits/refund-requests/notify',
   '/api/stores/notify',

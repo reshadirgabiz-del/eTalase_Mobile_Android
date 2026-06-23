@@ -1,6 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import crypto from 'crypto';
-import { SESSION_COOKIE, computeSessionToken } from '@/lib/auth';
+import {
+  SESSION_COOKIE,
+  SESSION_MAX_AGE_SECONDS,
+  issueSessionToken,
+} from '@/lib/auth';
 
 // In-memory rate limiter: 10 attempts per 15 min per IP.
 // Provides basic brute-force protection on warm instances; good enough for a
@@ -52,14 +56,14 @@ export async function POST(req: NextRequest) {
   // Clear attempts on successful login
   loginAttempts.delete(ip);
 
-  const token = await computeSessionToken();
+  const token = await issueSessionToken();
   const res = NextResponse.json({ ok: true, token });
   res.cookies.set(SESSION_COOKIE, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === 'production',
     sameSite: 'strict',
     path: '/',
-    maxAge: 60 * 60 * 24 * 7,
+    maxAge: SESSION_MAX_AGE_SECONDS,
   });
   return res;
 }
