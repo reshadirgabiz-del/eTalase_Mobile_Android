@@ -1,0 +1,68 @@
+{
+  "expo": {
+    "name": "e-Talase",
+    "slug": "jastip-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.jastip.mobile",
+      "infoPlist": {
+        "NSCameraUsageDescription": "Diperlukan untuk scan QR login dan mengambil foto bukti pengiriman",
+        "NSPhotoLibraryUsageDescription": "Diperlukan untuk memilih foto bukti pengiriman"
+      }
+    },
+    "android": {
+      "package": "com.jastip.mobile",
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.RECORD_AUDIO"
+      ]
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Diperlukan untuk scan QR login"
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Diperlukan untuk memilih foto bukti pengiriman",
+          "cameraPermission": "Diperlukan untuk mengambil foto bukti pengiriman"
+        }
+      ],
+      "expo-web-browser",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#F6F3EC"
+        }
+      ]
+    ],
+    "scheme": "jastip",
+    "experiments": {
+      "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "5eef8e2e-c34c-40bb-a857-81591f4d3d75"
+      }
+    },
+    "owner": "blackromantic"
+  }
+}
