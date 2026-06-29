@@ -12,6 +12,7 @@ import {
   colors,
 } from '@/components/ui';
 import type { StoreAccess } from '@/lib/types';
+import { hasMobileAppAccess, planDisplayName } from '@/lib/plans';
 
 interface StoreSelectViewProps {
   stores?: StoreAccess[];
@@ -114,11 +115,16 @@ export function StoreSelectView({
                   <Text style={{ fontSize: 15, fontWeight: '700', color: colors.text }}>{store.storeName}</Text>
                   <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                     <StatusPill label={store.role} tone={store.role === 'owner' ? 'purple' : 'blue'} />
-                    {store.plan ? <StatusPill label={store.plan} tone="green" /> : null}
+                    <StatusPill label={planDisplayName(store.plan)} tone={hasMobileAppAccess(store.plan) ? 'green' : 'neutral'} />
                     <Text style={{ color: colors.muted, fontSize: 12 }}>{store.memberCount} anggota</Text>
                   </View>
                 </View>
-                <ChevronRight size={18} color={colors.subtle} />
+                <View style={{ alignItems: 'flex-end', gap: 4 }}>
+                  {!hasMobileAppAccess(store.plan) ? (
+                    <Text style={{ color: colors.amber, fontSize: 10, fontWeight: '700' }}>Perlu Lifetime</Text>
+                  ) : null}
+                  <ChevronRight size={18} color={colors.subtle} />
+                </View>
               </View>
             </Card>
           </Pressable>

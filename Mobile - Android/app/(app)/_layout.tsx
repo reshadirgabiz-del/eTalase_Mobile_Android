@@ -1,11 +1,13 @@
 import { Redirect, Tabs } from 'expo-router';
 import { Link, Package, Send, User, WalletCards } from 'lucide-react-native';
 import { colors } from '@/components/ui';
+import { hasMobileAppAccess } from '@/lib/plans';
 import { useAppStore } from '@/store/authStore';
 
 export default function AppTabsLayout() {
   const selectedStore = useAppStore((state) => state.selectedStore);
-  if (!selectedStore) return <Redirect href={'/store-select' as never} />;
+  const mobileEnabled = hasMobileAppAccess(selectedStore?.plan);
+  if (!selectedStore || !mobileEnabled) return <Redirect href={'/store-select' as never} />;
 
   return (
     <Tabs

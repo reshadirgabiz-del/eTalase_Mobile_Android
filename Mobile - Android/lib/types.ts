@@ -6,6 +6,7 @@ export interface PaginatedResponse<T> {
 }
 
 export type MemberRole = 'owner' | 'admin' | 'delivery';
+export type PlanName = 'free' | 'lifetime';
 
 export interface StoreAccess {
   storeId: string;
@@ -14,7 +15,7 @@ export interface StoreAccess {
   storePhotoUrl?: string | null;
   role: MemberRole;
   memberCount: number;
-  plan?: string | null;
+  plan?: PlanName | null;
 }
 
 export interface ProductImage {

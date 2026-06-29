@@ -1,113 +1,72 @@
 ## About this document
-This document lies the pricing method for Jastip Platform that will be implemented in the apps.
 
-## Pricing tiers
+This document defines the current e-Talase pricing and entitlement model used by the frontend and backend.
 
-- Free (IDR 0 / selamanya)
->> 1 store
->> 1 member only (owner only, no additional team members)
->> 5 products per store, no categorization
->> Unlimited transactions, with admin fee per transaction (IDR 1k)
->> 10 temporary order links (2-hour expiry)
->> No permanent order links
->> No order link personal message
->> Manual product entry only (no Excel import)
->> 3 promo codes per store (one product per code)
->> Customer order tracking page (public)
->> Shipping label PDF (auth-gated)
->> No mobile app
->> No push & email notifications
+## Pricing model
 
-- Starter (IDR 150k / bulan)
->> 1 store
->> 2 total members (owner + 1 additional)
->> 15 products per store, with categorization
->> Unlimited transactions, no admin fee
->> Unlimited temporary order links (2-hour expiry)
->> 10 permanent order links
->> No order link personal message
->> Bulk product import via Excel template
->> 10 promo codes per store (one product per code, owner/admin only)
->> Customer order tracking page (public)
->> Shipping label PDF (auth-gated)
->> Mobile app: stock & transaction management (not available on Free)
->> Push & email notifications: order status, low stock (not available on Free)
->> Merchant support
+Plans are assigned per store, not per user account. Every new store starts on Free. A Lifetime purchase upgrades exactly one selected store and never expires. An owner may purchase Lifetime separately for multiple stores.
 
-- Growth (IDR 300k / bulan, recommended)
->> 3 stores
->> 5 total members (owner + 4 additional)
->> 50 products per store, with categorization
->> Unlimited transactions
->> Unlimited temporary order links + 50 permanent order links with personal message
->> Bulk product import via Excel template
->> 25 promo codes per store (multiple products per code, owner/admin only)
->> Customer order tracking page (public)
->> Shipping label PDF (auth-gated)
->> Mobile app: product, stock & transaction management
->> Push & email notifications (order status, low stock)
->> Priority merchant support
->> Setup support
->> Priority access to new feature releases
+Stores that existed when this pricing model was introduced are migrated automatically to Lifetime. Stores created afterward use Free by default.
 
-- Business (IDR 1000k / bulan)
->> 10 stores
->> 26 total members (owner + 25; additional at a fee)
->> 200 products per store, with categorization
->> Unlimited transactions
->> Unlimited temporary order links + 100 permanent order links with personal message
->> Bulk product import via Excel template
->> Unlimited promo codes (multiple products per code, owner/admin only)
->> Customer order tracking page (public)
->> Shipping label PDF (auth-gated)
->> 1 storefront customization (additional at a fee)
->> Analytics dashboard (order link performance, promo code usage)
->> Mobile app: product, stock & transaction management
->> Push & email notifications (order status, low stock)
->> Priority support
->> Setup support
+## Plans
 
-- Enterprise (Contact Us)
->> Everything in Business, but unlimited (stores, members, products, order links)
->> Storefront customization included
->> Analytics dashboard
->> Access to Jastip API
->> Dedicated support
+### Free — IDR 0, default
 
-## Feature availability matrix
+- One Free store slot per owner. Each Lifetime store adds capacity for the owner to create the next Free store.
+- One member: owner only.
+- Five active products per store, without categorization.
+- Unlimited transactions with an IDR 1,000 admin fee per transaction.
+- Ten active temporary order links with a two-hour expiry.
+- No permanent order links or personal order-link message.
+- Manual product entry only; no Excel import.
+- Three promo codes per store, limited to one product per code.
+- One shipment-origin location.
+- Customer order tracking and shipping-label PDF.
+- No mobile-app access or push/email notifications.
 
-| Feature | Free | Starter | Growth | Business | Enterprise |
-|---|---|---|---|---|---|
-| Stores | 1 | 1 | 3 | 10 | Unlimited |
-| Members (incl. owner) | 1 | 2 | 5 | 26 | Unlimited |
-| Products per store | 5 | 15 | 50 | 200 | Unlimited |
-| Product categorization | No | Yes | Yes | Yes | Yes |
-| Transaction fee | IDR 1k/tx | None | None | None | None |
-| Temporary order links | 10 | Unlimited | Unlimited | Unlimited | Unlimited |
-| Permanent order links | 0 | 10 | 50 | 100 | Unlimited |
-| Order link personal message | No | No | Yes | Yes | Yes |
-| Bulk product import (Excel) | No | Yes | Yes | Yes | Yes |
-| Promo codes | 3, one product each | 10, one product each | 25, multiple product allowed | Unlimited | Unlimited |
-| Customer order tracking | Yes | Yes | Yes | Yes | Yes |
-| Shipping label PDF | Yes | Yes | Yes | Yes | Yes |
-| Storefront customization | No | No | No | 1 (paid extra) | Unlimited |
-| Analytics dashboard | No | No | No | Yes | Yes |
-| Jastip API access | No | No | No | No | Yes |
-| Mobile app | **No** | Yes | Yes | Yes | Yes |
-| Push & email notifications | **No** | Yes | Yes | Yes | Yes |
+### Lifetime — IDR 300,000 once per store
 
-## Role-based quantity restrictions (server-enforced)
+- Applies permanently to one selected store; no renewal or expiry.
+- Owners can purchase Lifetime multiple times for different stores.
+- Five members total: owner plus four additional members.
+- 100 active products per store, with categorization.
+- Unlimited transactions with no admin fee.
+- Unlimited active temporary order links.
+- 100 permanent order links per store, with personal messages.
+- Excel product import.
+- 100 promo codes per store, with multiple products allowed per code.
+- Three shipment-origin locations.
+- Storefront customization, SDK, custom-domain and API access.
+- Customer order tracking and shipping-label PDF.
+- Mobile-app access for product, stock and transaction management.
+- Push and email notifications.
+- Priority merchant support, setup support and early feature access.
 
-All limits below are enforced server-side via the subscriptions service. Clients cannot bypass them.
+## Feature matrix
 
-- **maxStores**: how many stores an owner can create under one subscription
-- **maxProductsPerStore**: products limit per individual store
-- **maxMembersPerStore**: total member count including the owner
-- **maxTemporaryOrderLinks**: active temporary links per store; null = unlimited (Free: 10, others: unlimited)
-- **maxPermanentOrderLinks**: permanent (non-expiring) links per store; 0 = disabled
-- **maxPromoCodes**: max active promo codes per store (Free: 3, Starter: 10, Growth: 25, Business/Enterprise: unlimited)
-- **transactionFeeIdr**: per-transaction admin fee in IDR (Free: 1000, others: 0)
-- **hasMultiProductPromo**: whether a single promo code can target more than one specific product (false on Free/Starter, true on Growth+)
-- **hasMobileApp**: whether the user can log in and use the mobile app (false on Free, true on Starter+)
-- **hasNotifications**: whether push & email notifications are sent (false on Free, true on Starter+)
-- **hasProductImport**: whether bulk Excel import is available (false on Free, true on Starter+)
+| Feature | Free | Lifetime |
+|---|---:|---:|
+| Price | IDR 0 | IDR 300,000 once per store |
+| Expiry | Never | Never |
+| Store scope | Default Free store | One purchased store |
+| Members including owner | 1 | 5 |
+| Products per store | 5 | 100 |
+| Product categorization | No | Yes |
+| Transaction fee | IDR 1,000/order | None |
+| Active temporary order links | 10 | Unlimited |
+| Permanent order links | 0 | 100 |
+| Order-link personal message | No | Yes |
+| Product import | No | Yes |
+| Promo codes | 3, one product each | 100, multiple products |
+| Shipment-origin locations | 1 | 3 |
+| Storefront customization/API | No | Yes |
+| Mobile app | No | Yes |
+| Push and email notifications | No | Yes |
+
+## Enforcement rules
+
+- `subscriptions.store_id` identifies the single store receiving a Lifetime entitlement.
+- Checkout requires an owned `storeId`; purchasing Lifetime for an already-Lifetime store is rejected.
+- Backend limits and feature flags resolve from the target store, never from another store owned by the same user.
+- A user may hold multiple active Lifetime purchases as long as each purchase targets a different store.
+- Existing stores are backfilled with a non-expiring Lifetime entitlement by the deployment migration.

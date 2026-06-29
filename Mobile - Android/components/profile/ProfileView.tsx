@@ -30,6 +30,7 @@ import {
   colors,
 } from '@/components/ui';
 import type { StoreAccess } from '@/lib/types';
+import { planDisplayName } from '@/lib/plans';
 
 interface ProfileViewProps {
   store: StoreAccess;
@@ -171,7 +172,7 @@ export function ProfileView({
             <Text style={{ fontSize: 14.5, fontWeight: '700', color: colors.text }}>{store.storeName}</Text>
             <View style={{ marginTop: 5, flexDirection: 'row', gap: 6 }}>
               <StatusPill label={store.role} tone={store.role === 'owner' ? 'purple' : 'blue'} />
-              {store.plan ? <StatusPill label={store.plan} tone="green" /> : null}
+              <StatusPill label={planDisplayName(store.plan)} tone={store.plan === 'lifetime' ? 'green' : 'neutral'} />
             </View>
           </View>
         </View>
@@ -261,8 +262,8 @@ export function ProfileView({
           <Crown size={18} color="#B07A00" />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#8A6B12' }}>Upgrade ke Premium</Text>
-          <Text style={{ marginTop: 2, color: '#8A6B12', fontSize: 11 }}>Buka fitur premium untuk toko Anda</Text>
+          <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#8A6B12' }}>Paket Lifetime</Text>
+          <Text style={{ marginTop: 2, color: '#8A6B12', fontSize: 11 }}>Kelola paket untuk toko ini</Text>
         </View>
         <View style={{
           width: 26,

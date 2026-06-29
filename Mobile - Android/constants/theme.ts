@@ -43,10 +43,8 @@ export const radius = {
 };
 
 export const PLAN_COLORS: Record<string, string> = {
-  starter: colors.gray,
-  growth: colors.teal,
-  business: colors.info,
-  enterprise: colors.purple,
+  free: colors.gray,
+  lifetime: colors.teal,
 };
 
 export const STATUS_COLORS: Record<string, string> = {

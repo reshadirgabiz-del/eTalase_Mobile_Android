@@ -44,7 +44,7 @@ export function useProfile() {
     switchStore,
     openStorefront: () => WebBrowser.openBrowserAsync(`https://app.e-talase.com/${store.storeId}`),
     openCredits: () => openDashboard('/dashboard/credits'),
-    openPlan: () => openDashboard('/dashboard/plans'),
+    openPlan: () => openDashboard(`/dashboard/billing?storeId=${encodeURIComponent(store.storeId)}`),
     openAccountSettings: () => openDashboard('/dashboard/account'),
     savePreferences: () => Alert.alert('Berhasil', 'Preferensi notifikasi disimpan di perangkat ini.'),
     enableDevice: () => Alert.alert('Info', 'Jika izin notifikasi perangkat aktif, aplikasi akan menerima notifikasi toko.'),
