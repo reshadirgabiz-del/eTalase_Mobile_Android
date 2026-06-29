@@ -1,23 +1,28 @@
 {
   "expo": {
     "name": "e-Talase",
-    "slug": "jastip-mobile",
+    "slug": "etalase-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
+    "icon": "./UI:UX/assets/favicon.png",
     "userInterfaceStyle": "light",
     "assetBundlePatterns": [
       "**/*"
     ],
     "ios": {
       "supportsTablet": true,
-      "bundleIdentifier": "com.jastip.mobile",
+      "bundleIdentifier": "com.etalase.mobile",
       "infoPlist": {
         "NSCameraUsageDescription": "Diperlukan untuk scan QR login dan mengambil foto bukti pengiriman",
         "NSPhotoLibraryUsageDescription": "Diperlukan untuk memilih foto bukti pengiriman"
       }
     },
     "android": {
-      "package": "com.jastip.mobile",
+      "package": "com.etalase.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./UI:UX/assets/android-adaptive-icon-foreground.png",
+        "backgroundColor": "#F6F3EC"
+      },
       "permissions": [
         "android.permission.CAMERA",
         "android.permission.POST_NOTIFICATIONS",
@@ -47,20 +52,29 @@
       "expo-web-browser",
       "expo-font",
       [
+        "expo-notifications",
+        {
+          "color": "#1A1A18"
+        }
+      ],
+      [
         "expo-splash-screen",
         {
+          "image": "./UI:UX/assets/favicon.png",
+          "imageWidth": 168,
+          "resizeMode": "contain",
           "backgroundColor": "#F6F3EC"
         }
       ]
     ],
-    "scheme": "jastip",
+    "scheme": "etalase",
     "experiments": {
       "typedRoutes": true
     },
     "extra": {
       "router": {},
       "eas": {
-        "projectId": "5eef8e2e-c34c-40bb-a857-81591f4d3d75"
+        "projectId": "cec1ce5b-5349-4463-9de6-cb7e59c12853"
       }
     },
     "owner": "blackromantic"
