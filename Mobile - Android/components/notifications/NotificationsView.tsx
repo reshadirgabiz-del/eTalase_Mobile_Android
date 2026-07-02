@@ -1,6 +1,7 @@
 import { Pressable, Text } from 'react-native';
 import { Button, Card, EmptyState, Screen, ScreenSkeleton } from '@/components/ui';
 import { formatDate, type StoreNotification } from '@/lib/types';
+import { useT } from '@/lib/i18n';
 
 interface NotificationsViewProps {
   storeName: string;
@@ -25,18 +26,19 @@ export function NotificationsView({
   refreshing,
   onRefresh,
 }: NotificationsViewProps) {
+  const t = useT();
   if (loading) return <ScreenSkeleton cards={4} />;
 
   return (
     <Screen
-      title="Notifikasi"
+      title={t('notifications.title')}
       subtitle={storeName}
-      right={<Button variant="light" onPress={onBack}>Kembali</Button>}
+      right={<Button variant="light" onPress={onBack}>{t('common.back')}</Button>}
       refreshing={refreshing}
       onRefresh={onRefresh}
     >
-      <Button variant="light" onPress={onMarkAllRead} disabled={markingAllRead}>Tandai Semua Dibaca</Button>
-      {notifications?.length === 0 ? <EmptyState title="Tidak ada notifikasi" body="Aktivitas toko akan muncul di sini." /> : null}
+      <Button variant="light" onPress={onMarkAllRead} disabled={markingAllRead}>{t('notifications.markAllRead')}</Button>
+      {notifications?.length === 0 ? <EmptyState title={t('notifications.empty')} body={t('notifications.emptyBody')} /> : null}
       {notifications?.map((item) => (
         <Pressable key={item.id} onPress={() => onOpenNotification(item)} style={({ pressed }) => [{ opacity: pressed ? 0.85 : 1 }]}>
           <Card style={{ opacity: item.read_at ? 0.65 : 1 }}>

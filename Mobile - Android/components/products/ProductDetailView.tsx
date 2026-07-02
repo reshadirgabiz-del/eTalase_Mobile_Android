@@ -11,6 +11,7 @@ import {
   colors,
 } from '@/components/ui';
 import type { Product } from '@/lib/types';
+import { useT } from '@/lib/i18n';
 
 interface ProductDetailViewProps {
   product?: Product;
@@ -65,6 +66,7 @@ export function ProductDetailView({
   onSave,
   onToggleArchive,
 }: ProductDetailViewProps) {
+  const t = useT();
   return (
     <Screen>
       <View style={{ flexDirection: 'row', alignItems: 'center', gap: 10, paddingBottom: 4 }}>
@@ -72,7 +74,7 @@ export function ProductDetailView({
           <ArrowLeft size={20} color={colors.text} />
         </Pressable>
         <Text style={{ fontSize: 20, fontWeight: '700', color: colors.text, letterSpacing: -0.3 }}>
-          Edit Produk
+          {t('productDetail.title')}
         </Text>
       </View>
 
@@ -81,7 +83,7 @@ export function ProductDetailView({
         <View style={{ gap: 14 }}>
           <Card style={{ padding: 0, overflow: 'hidden' }}>
             <StatusPill
-              label={product.isActive ? 'Aktif' : 'Nonaktif'}
+              label={product.isActive ? t('products.statusActive') : t('products.statusInactive')}
               tone={product.isActive ? 'green' : 'neutral'}
               pinTopRight
             />
@@ -114,10 +116,10 @@ export function ProductDetailView({
           </Card>
 
           <Card>
-            <SectionLabel icon={ImageIcon}>Gambar Produk</SectionLabel>
+            <SectionLabel icon={ImageIcon}>{t('productDetail.imagesSection')}</SectionLabel>
             <View style={{ gap: 10 }}>
               <Button variant="dashed" icon={Upload} onPress={onUploadImages} disabled={uploadingImages}>
-                Upload Beberapa Gambar
+                {t('productDetail.uploadImages')}
               </Button>
               {imageUrls.length ? (
                 <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: 10 }}>
@@ -147,7 +149,7 @@ export function ProductDetailView({
                         <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                           {active ? <Star size={11} color={colors.green} /> : null}
                           <Text style={{ color: active ? colors.green : colors.muted, fontSize: 10.5, fontWeight: '700' }}>
-                            {active ? 'Utama' : 'Pilih'}
+                            {active ? t('productDetail.mainImage') : t('productDetail.pickImage')}
                           </Text>
                         </View>
                       </Pressable>
@@ -155,21 +157,21 @@ export function ProductDetailView({
                   })}
                 </View>
               ) : (
-                <Text style={{ color: colors.muted, fontSize: 12 }}>Belum ada gambar produk.</Text>
+                <Text style={{ color: colors.muted, fontSize: 12 }}>{t('productDetail.noImages')}</Text>
               )}
             </View>
           </Card>
 
           <Card>
-            <SectionLabel icon={Tag}>Informasi</SectionLabel>
+            <SectionLabel icon={Tag}>{t('productDetail.infoSection')}</SectionLabel>
             <View style={{ gap: 12 }}>
-              <Field label="Nama Produk" value={name} onChangeText={onNameChange} placeholder="Nama produk" />
-              <Field label="SKU" value={sku} onChangeText={onSkuChange} placeholder="SKU-001" />
+              <Field label={t('productDetail.name')} value={name} onChangeText={onNameChange} placeholder={t('productDetail.namePlaceholder')} />
+              <Field label={t('productDetail.sku')} value={sku} onChangeText={onSkuChange} placeholder="SKU-001" />
               <Field
-                label="Deskripsi"
+                label={t('productDetail.description')}
                 value={description}
                 onChangeText={onDescriptionChange}
-                placeholder="Deskripsi singkat"
+                placeholder={t('productDetail.descPlaceholder')}
                 multiline
                 numberOfLines={4}
                 style={{ minHeight: 90, paddingTop: 10, textAlignVertical: 'top' }}
@@ -178,24 +180,24 @@ export function ProductDetailView({
           </Card>
 
           <Card>
-            <SectionLabel icon={Package}>Harga & Stok</SectionLabel>
+            <SectionLabel icon={Package}>{t('productDetail.priceStock')}</SectionLabel>
             <View style={{ gap: 12 }}>
               <Field
-                label="Harga"
+                label={t('productDetail.price')}
                 value={price}
                 onChangeText={onPriceChange}
                 placeholder="0"
                 keyboardType="numeric"
               />
               <Field
-                label="Harga Diskon (opsional)"
+                label={t('productDetail.discountedPrice')}
                 value={discountedPrice}
                 onChangeText={onDiscountedPriceChange}
                 placeholder="0"
                 keyboardType="numeric"
               />
               <Field
-                label="Stok"
+                label={t('productDetail.stock')}
                 value={stock}
                 onChangeText={onStockChange}
                 placeholder="0"
@@ -205,13 +207,13 @@ export function ProductDetailView({
           </Card>
 
           <Card>
-            <SectionLabel icon={FileText}>Aksi</SectionLabel>
+            <SectionLabel icon={FileText}>{t('productDetail.actions')}</SectionLabel>
             <View style={{ gap: 10 }}>
               <Button variant="green" icon={CheckCircle2} onPress={onSave} disabled={saving}>
-                Simpan Perubahan
+                {t('productDetail.save')}
               </Button>
               <Button variant="light" icon={Boxes} onPress={onToggleArchive} disabled={togglingArchive}>
-                {product.isArchived ? 'Pulihkan Produk' : 'Arsipkan Produk'}
+                {product.isArchived ? t('productDetail.restore') : t('productDetail.archive')}
               </Button>
             </View>
           </Card>

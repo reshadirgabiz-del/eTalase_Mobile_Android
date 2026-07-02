@@ -16,14 +16,15 @@ import {
   toneAccent,
 } from '@/components/ui';
 import { shortId, type Order, type OrderStatus } from '@/lib/types';
+import { useT, type TranslationKey } from '@/lib/i18n';
 
-const STATUS_LABEL: Record<OrderStatus, string> = {
-  pending: 'Menunggu',
-  paid: 'Dibayar',
-  processing: 'Diproses',
-  shipped: 'Dikirim',
-  delivered: 'Diterima',
-  cancelled: 'Dibatalkan',
+const STATUS_LABEL_KEYS: Record<OrderStatus, TranslationKey> = {
+  pending: 'orders.status.pending',
+  paid: 'orders.status.paid',
+  processing: 'orders.status.processing',
+  shipped: 'orders.status.shipped',
+  delivered: 'orders.status.delivered',
+  cancelled: 'orders.status.cancelled',
 };
 
 export function ShipmentsView({
@@ -45,6 +46,7 @@ export function ShipmentsView({
   refreshing?: boolean;
   onRefresh?: () => void;
 }) {
+  const t = useT();
   const [tab, setTab] = useState<'active' | 'archive'>('active');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'needs_receipt' | 'with_receipt'>('all');
@@ -66,15 +68,15 @@ export function ShipmentsView({
   if (loading) return <ScreenSkeleton cards={5} />;
 
   const FILTER_OPTIONS: { value: 'all' | 'needs_receipt' | 'with_receipt'; label: string; dotColor: string }[] = [
-    { value: 'all', label: 'Semua', dotColor: colors.text },
-    { value: 'needs_receipt', label: 'Belum Resi', dotColor: '#B07A00' },
-    { value: 'with_receipt', label: 'Ada Resi', dotColor: '#0FB5BA' },
+    { value: 'all', label: t('shipments.filter.all'), dotColor: colors.text },
+    { value: 'needs_receipt', label: t('shipments.filter.needsReceipt'), dotColor: '#B07A00' },
+    { value: 'with_receipt', label: t('shipments.filter.withReceipt'), dotColor: '#0FB5BA' },
   ];
 
   return (
     <Screen
-      title="Pengiriman"
-      subtitle={`${orders.length} paket ditemukan`}
+      title={t('shipments.title')}
+      subtitle={`${orders.length} ${t('shipments.subtitleSuffix')}`}
       right={<FilterDropdown value={filter} options={FILTER_OPTIONS} onChange={setFilter} />}
       refreshing={refreshing}
       onRefresh={onRefresh}
@@ -83,21 +85,17 @@ export function ShipmentsView({
         value={tab}
         onChange={setTab}
         options={[
-          { value: 'active', label: 'Aktif', icon: Inbox },
-          { value: 'archive', label: 'Arsip', icon: Archive },
+          { value: 'active', label: t('shipments.tabActive'), icon: Inbox },
+          { value: 'archive', label: t('shipments.tabArchive'), icon: Archive },
         ]}
       />
-      <SearchField value={search} onChangeText={setSearch} placeholder="Cari penerima atau nomor resi..." />
+      <SearchField value={search} onChangeText={setSearch} placeholder={t('shipments.searchPlaceholder')} />
 
       {!loading && filtered.length === 0 ? (
         <EmptyState
           icon={Package}
-          title={tab === 'active' ? 'Belum ada pengiriman' : 'Arsip kosong'}
-          body={
-            tab === 'active'
-              ? 'Pesanan yang sudah dibayar akan muncul di daftar pengiriman.'
-              : 'Pengiriman yang diarsipkan akan muncul di sini.'
-          }
+          title={tab === 'active' ? t('shipments.emptyActive') : t('shipments.emptyArchive')}
+          body={tab === 'active' ? t('shipments.emptyActiveBody') : t('shipments.emptyArchiveBody')}
         />
       ) : null}
 
@@ -109,7 +107,7 @@ export function ShipmentsView({
           : 'amber';
         return (
           <Card key={order.id} accent={toneAccent[tone]}>
-            <StatusPill label={STATUS_LABEL[order.status]} tone={tone} pinTopRight />
+            <StatusPill label={t(STATUS_LABEL_KEYS[order.status])} tone={tone} pinTopRight />
             <View style={{ paddingRight: 92 }}>
               <Text style={{ color: colors.subtle, fontWeight: '700', fontSize: 11 }}>{shortId(order.id)}</Text>
             </View>
@@ -127,15 +125,15 @@ export function ShipmentsView({
             </View>
             <View style={{ marginTop: 8 }}>
               {order.trackingNumber ? (
-                <InfoBanner tone="success" icon={Package}>Resi {order.trackingNumber}</InfoBanner>
+                <InfoBanner tone="success" icon={Package}>{t('shipments.trackingPrefix')} {order.trackingNumber}</InfoBanner>
               ) : (
-                <InfoBanner tone="warn" icon={Clock}>Belum ada nomor resi</InfoBanner>
+                <InfoBanner tone="warn" icon={Clock}>{t('shipments.noTrackingYet')}</InfoBanner>
               )}
             </View>
             <View style={{ marginTop: 10, flexDirection: 'row', gap: 7 }}>
               <View style={{ flex: 1 }}>
                 <Button variant="light" icon={Edit3} fullWidth onPress={() => onOpenOrder(order.id)}>
-                  {order.trackingNumber ? 'Lihat Detail' : 'Add receipt number'}
+                  {order.trackingNumber ? t('shipments.viewDetail') : t('shipments.addTracking')}
                 </Button>
               </View>
               <Button
@@ -144,14 +142,14 @@ export function ShipmentsView({
                 disabled={downloadingLabel}
                 onPress={() => onDownloadLabel(order.id)}
               >
-                Label
+                {t('shipments.labelBtn')}
               </Button>
               <Button
                 variant="light"
                 icon={Archive}
                 onPress={() => onToggleArchive({ id: order.id, archived: order.isArchived })}
               >
-                {order.isArchived ? 'Restore' : 'Archive'}
+                {order.isArchived ? t('shipments.restore') : t('shipments.archiveBtn')}
               </Button>
             </View>
           </Card>

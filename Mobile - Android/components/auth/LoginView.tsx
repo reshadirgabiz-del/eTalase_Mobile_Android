@@ -2,7 +2,8 @@ import { CameraView } from 'expo-camera';
 import { Link } from 'expo-router';
 import { Camera, X } from 'lucide-react-native';
 import { Image, Modal, Pressable, StyleSheet, Text, View } from 'react-native';
-import { Card, colors, Field, Screen } from '@/components/ui';
+import { Card, colors, Field, LanguageToggle, Screen } from '@/components/ui';
+import { useT } from '@/lib/i18n';
 
 interface LoginViewProps {
   code: string;
@@ -25,8 +26,12 @@ export function LoginView({
   onCloseScanner,
   onScanQr,
 }: LoginViewProps) {
+  const t = useT();
   return (
     <Screen>
+      <View style={styles.topBar}>
+        <LanguageToggle />
+      </View>
       <View style={styles.hero}>
         <View style={styles.logoWrap}>
           <Image source={require('../../UI:UX/assets/logo.png')} style={styles.logoImage} resizeMode="contain" />
@@ -34,17 +39,15 @@ export function LoginView({
             <Text style={styles.mobileBadgeText}>MOBILE</Text>
           </View>
         </View>
-        <Text style={styles.tagline}>Kelola toko Anda dengan mudah</Text>
+        <Text style={styles.tagline}>{t('login.tagline')}</Text>
       </View>
 
       <Card style={styles.loginCard}>
         <View style={styles.cardHead}>
-          <Text style={styles.cardTitle}>Masuk ke akun Anda</Text>
-          <Link href={'/how-to-login' as never} style={styles.help}>Cara login?</Link>
+          <Text style={styles.cardTitle}>{t('login.title')}</Text>
+          <Link href={'/how-to-login' as never} style={styles.help}>{t('login.help')}</Link>
         </View>
-        <Text style={styles.copy}>
-          Buka Akun, Pengaturan Akun, Aplikasi Mobile, lalu klik "Buka di Aplikasi Mobile".
-        </Text>
+        <Text style={styles.copy}>{t('login.copy')}</Text>
         <View style={{ marginTop: 18, gap: 14 }}>
           <Pressable
             accessibilityRole="button"
@@ -53,9 +56,13 @@ export function LoginView({
             style={({ pressed }) => [styles.scanButton, pressed && { opacity: 0.85 }, loading && { opacity: 0.6 }]}
           >
             <Camera size={23} color="#FFFFFF" />
-            <Text style={styles.scanButtonText}>Scan QR dari Web</Text>
+            <Text style={styles.scanButtonText}>{t('login.scanQr')}</Text>
           </Pressable>
-          <View style={styles.divider}><View style={styles.line} /><Text style={styles.or}>atau masukkan kode</Text><View style={styles.line} /></View>
+          <View style={styles.divider}>
+            <View style={styles.line} />
+            <Text style={styles.or}>{t('login.or')}</Text>
+            <View style={styles.line} />
+          </View>
           <View style={styles.codeRow}>
             <View style={{ flex: 1 }}>
               <Field
@@ -73,14 +80,14 @@ export function LoginView({
               disabled={loading || !code.trim()}
               style={({ pressed }) => [styles.submitButton, pressed && { opacity: 0.85 }, (!code.trim() || loading) && styles.submitDisabled]}
             >
-              <Text style={styles.submitButtonText}>Masuk</Text>
+              <Text style={styles.submitButtonText}>{t('login.submit')}</Text>
             </Pressable>
           </View>
         </View>
       </Card>
 
       <View style={styles.footerRow}>
-        <Text style={styles.footerText}>Developed by</Text>
+        <Text style={styles.footerText}>{t('login.footerDev')}</Text>
         <Image source={require('../../UI:UX/assets/logo.png')} style={styles.footerLogo} resizeMode="contain" />
       </View>
 
@@ -94,7 +101,7 @@ export function LoginView({
           <View style={styles.scannerTop}>
             <Pressable style={styles.closeButton} onPress={onCloseScanner}>
               <X size={20} color={colors.text} />
-              <Text style={styles.closeText}>Tutup</Text>
+              <Text style={styles.closeText}>{t('common.close')}</Text>
             </Pressable>
           </View>
           <View style={styles.scanBox} />
@@ -105,12 +112,15 @@ export function LoginView({
 }
 
 const styles = StyleSheet.create({
+  topBar: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 5,
+  },
   hero: { alignItems: 'center', marginTop: 110, marginBottom: 46 },
   logoWrap: { width: 248, height: 76 },
   logoImage: { width: 248, height: 76 },
-  // ── Tune the MOBILE badge from here ───────────────────────────────────────
-  // top:   negative → moves badge UP; positive → DOWN
-  // right: negative → moves badge to the RIGHT (outside logoWrap); positive → INWARD
   mobileBadge: {
     position: 'absolute',
     top: -10,

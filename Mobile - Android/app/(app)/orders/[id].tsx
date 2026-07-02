@@ -1,11 +1,13 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { OrderDetailView } from '@/components/orders/OrderDetailView';
 import { useOrderDetail } from '@/features/orders/useOrderDetail';
+import { useAppStore } from '@/store/authStore';
 
 export default function OrderDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const detail = useOrderDetail(id);
+  const role = useAppStore((state) => state.selectedStore?.role);
 
   return (
     <OrderDetailView
@@ -16,6 +18,9 @@ export default function OrderDetailScreen() {
       trackingNumber={detail.trackingNumber}
       courierName={detail.courierName}
       savingManualShipment={detail.savingManualShipment}
+      isOwner={role === 'owner'}
+      historyLinkUrl={detail.historyLinkUrl}
+      creatingHistoryLink={detail.creatingHistoryLink}
       onBack={() => router.back()}
       onTrackingNumberChange={detail.setTrackingNumber}
       onCourierNameChange={detail.setCourierName}
@@ -30,6 +35,7 @@ export default function OrderDetailScreen() {
       onUploadPhoto={detail.uploadPhoto}
       uploadingPhoto={detail.uploadingPhoto}
       onOpenAttachment={detail.openAttachment}
+      onCreateHistoryLink={() => detail.createHistoryLink()}
       onRefresh={() => detail.order.refetch()}
     />
   );

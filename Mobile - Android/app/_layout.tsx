@@ -8,9 +8,9 @@ import { QueryClient, QueryClientProvider, useQueryClient } from '@tanstack/reac
 import { Stack, useRouter, useSegments } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useMemo } from 'react';
-import { ActivityIndicator, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { tokenCache } from '@/lib/clerkTokenCache';
-import { colors } from '@/components/ui';
+import { BrandedLoading, colors } from '@/components/ui';
 import { useAppStore } from '@/store/authStore';
 
 function AuthGate() {
@@ -47,11 +47,7 @@ function AuthGate() {
   }, [isLoaded, isSignedIn, router, segments]);
 
   if (!isLoaded) {
-    return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
-        <ActivityIndicator color={colors.green} />
-      </View>
-    );
+    return <BrandedLoading />;
   }
 
   return (
@@ -74,9 +70,15 @@ export default function RootLayout() {
   });
 
   if (!fontsLoaded) {
+    return <BrandedLoading />;
+  }
+
+  if (!publishableKey) {
     return (
-      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: colors.bg }}>
-        <ActivityIndicator color={colors.green} />
+      <View style={{ flex: 1, alignItems: 'center', justifyContent: 'center', padding: 24, backgroundColor: colors.bg }}>
+        <Text style={{ color: colors.text, fontSize: 16, fontWeight: '700', textAlign: 'center' }}>
+          Konfigurasi login belum tersedia.
+        </Text>
       </View>
     );
   }

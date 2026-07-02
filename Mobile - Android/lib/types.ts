@@ -151,8 +151,17 @@ export interface OrderLink {
   expires_at: string | null;
   is_permanent: boolean;
   message: string | null;
+  link_type?: 'preset' | 'history';
+  customer_label?: string | null;
   created_by: string;
   created_at: string;
+}
+
+export interface CustomerWithHistory {
+  name: string;
+  phone: string | null;
+  latestOrderId: string;
+  products: string[];
 }
 
 export interface StoreNotification {

@@ -3,8 +3,9 @@ import * as WebBrowser from 'expo-web-browser';
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
 import { Alert } from 'react-native';
-import { ordersApi, uploadApi } from '@/lib/api';
+import { FRONTEND_BASE, orderLinksApi, ordersApi, uploadApi } from '@/lib/api';
 import { useApiToken } from '@/lib/hooks';
+import { t } from '@/lib/i18n';
 import type { OrderStatus } from '@/lib/types';
 import { useAppStore } from '@/store/authStore';
 
@@ -17,6 +18,7 @@ export function useOrderDetail(id: string) {
   const queryClient = useQueryClient();
   const [trackingNumber, setTrackingNumber] = useState('');
   const [courierName, setCourierName] = useState('');
+  const [historyLinkUrl, setHistoryLinkUrl] = useState<string | null>(null);
 
   const order = useQuery({
     queryKey: ['order', id, store.storeId],
@@ -29,9 +31,9 @@ export function useOrderDetail(id: string) {
       order.refetch();
       queryClient.invalidateQueries({ queryKey: ['orders', store.storeId] });
       queryClient.invalidateQueries({ queryKey: ['shipments', store.storeId] });
-      Alert.alert('Berhasil', 'Status pesanan diperbarui.');
+      Alert.alert(t('common.success'), t('alert.orderStatusUpdated'));
     },
-    onError: (error) => Alert.alert('Gagal mengubah status', (error as Error).message),
+    onError: (error) => Alert.alert(t('alert.orderStatusFailed'), (error as Error).message),
   });
 
   const manualShipment = useMutation({
@@ -40,9 +42,9 @@ export function useOrderDetail(id: string) {
       order.refetch();
       queryClient.invalidateQueries({ queryKey: ['orders', store.storeId] });
       queryClient.invalidateQueries({ queryKey: ['shipments', store.storeId] });
-      Alert.alert('Berhasil', 'Nomor resi disimpan.');
+      Alert.alert(t('common.success'), t('alert.trackingSaved'));
     },
-    onError: (error) => Alert.alert('Gagal menyimpan resi', (error as Error).message),
+    onError: (error) => Alert.alert(t('alert.trackingFailed'), (error as Error).message),
   });
 
   const archiveOrder = useMutation({
@@ -56,9 +58,9 @@ export function useOrderDetail(id: string) {
       order.refetch();
       queryClient.invalidateQueries({ queryKey: ['orders', store.storeId] });
       queryClient.invalidateQueries({ queryKey: ['shipments', store.storeId] });
-      Alert.alert('Berhasil', order.data?.isArchived ? 'Pesanan dipulihkan.' : 'Pesanan diarsipkan.');
+      Alert.alert(t('common.success'), order.data?.isArchived ? t('alert.unarchived') : t('alert.archived'));
     },
-    onError: (error) => Alert.alert('Gagal mengubah arsip', (error as Error).message),
+    onError: (error) => Alert.alert(t('alert.archiveFailed'), (error as Error).message),
   });
 
   const confirmTransfer = useMutation({
@@ -67,15 +69,15 @@ export function useOrderDetail(id: string) {
       order.refetch();
       queryClient.invalidateQueries({ queryKey: ['orders', store.storeId] });
       queryClient.invalidateQueries({ queryKey: ['shipments', store.storeId] });
-      Alert.alert('Berhasil', 'Transfer dikonfirmasi.');
+      Alert.alert(t('common.success'), t('alert.transferConfirmed'));
     },
-    onError: (error) => Alert.alert('Gagal konfirmasi transfer', (error as Error).message),
+    onError: (error) => Alert.alert(t('alert.transferFailed'), (error as Error).message),
   });
 
   const downloadLabel = useMutation({
     mutationFn: async () => ordersApi.downloadAndShareLabelPdf(id, store.storeId, await getToken()),
-    onSuccess: () => Alert.alert('Berhasil', 'Label pengiriman siap dibagikan atau disimpan.'),
-    onError: (error) => Alert.alert('Gagal download label', (error as Error).message),
+    onSuccess: () => Alert.alert(t('common.success'), t('alert.labelReady')),
+    onError: (error) => Alert.alert(t('alert.labelFailed'), (error as Error).message),
   });
 
   const uploadPhoto = useMutation({
@@ -85,7 +87,7 @@ export function useOrderDetail(id: string) {
           ? await ImagePicker.requestCameraPermissionsAsync()
           : await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (!permission.granted) {
-        throw new Error(source === 'camera' ? 'Izin kamera diperlukan untuk mengambil foto.' : 'Izin galeri diperlukan untuk memilih foto.');
+        throw new Error(source === 'camera' ? t('alert.cameraPermission') : t('alert.galleryPermission'));
       }
 
       const pickerOptions: ImagePicker.ImagePickerOptions = {
@@ -119,25 +121,47 @@ export function useOrderDetail(id: string) {
     },
     onSuccess: (updated) => {
       if (updated) order.refetch();
-      if (updated) Alert.alert('Berhasil', 'Foto bukti berhasil diupload.');
+      if (updated) Alert.alert(t('common.success'), t('alert.photoUploaded'));
     },
-    onError: (error) => Alert.alert('Gagal upload foto', (error as Error).message),
+    onError: (error) => Alert.alert(t('alert.photoFailed'), (error as Error).message),
   });
 
   const choosePhoto = () => {
-    Alert.alert('Upload Foto Bukti', 'Pilih sumber foto untuk dilampirkan ke pesanan.', [
-      { text: 'Kamera', onPress: () => uploadPhoto.mutate('camera') },
-      { text: 'Galeri', onPress: () => uploadPhoto.mutate('library') },
-      { text: 'Batal', style: 'cancel' },
+    Alert.alert(t('alert.uploadPhotoTitle'), t('alert.uploadPhotoBody'), [
+      { text: t('alert.camera'), onPress: () => uploadPhoto.mutate('camera') },
+      { text: t('alert.gallery'), onPress: () => uploadPhoto.mutate('library') },
+      { text: t('common.cancel'), style: 'cancel' },
     ]);
   };
 
+  const createHistoryLink = useMutation({
+    mutationFn: async () => {
+      const current = order.data;
+      if (!current) throw new Error(t('alert.orderNotReady'));
+      const token = await getToken();
+      const link = await orderLinksApi.create(store.storeId, [], token, {
+        isPermanent: true,
+        linkType: 'history',
+        customerLabel: current.address.recipientName,
+      });
+      await orderLinksApi.assignOrder(link.id, current.id, store.storeId, token);
+      const base = FRONTEND_BASE || 'https://app.e-talase.com';
+      return `${base}/${store.storeId}/order-link/${link.id}`;
+    },
+    onSuccess: (url) => {
+      setHistoryLinkUrl(url);
+      queryClient.invalidateQueries({ queryKey: ['links', store.storeId] });
+      Alert.alert(t('common.success'), t('alert.historyLinkCreated'));
+    },
+    onError: (error) => Alert.alert(t('alert.historyLinkFailed'), (error as Error).message),
+  });
+
   const openAttachment = (url?: string | null) => {
     if (!url) {
-      Alert.alert('Lampiran tidak tersedia', 'File ini belum memiliki URL yang bisa dibuka.');
+      Alert.alert(t('alert.attachmentUnavailableTitle'), t('alert.attachmentUnavailableBody'));
       return;
     }
-    WebBrowser.openBrowserAsync(url).catch(() => Alert.alert('Gagal membuka lampiran', 'Lampiran belum bisa dibuka.'));
+    WebBrowser.openBrowserAsync(url).catch(() => Alert.alert(t('alert.attachmentOpenFailedTitle'), t('alert.attachmentOpenFailedBody')));
   };
 
   return {
@@ -158,5 +182,9 @@ export function useOrderDetail(id: string) {
     uploadPhoto: choosePhoto,
     uploadingPhoto: uploadPhoto.isPending,
     openAttachment,
+    historyLinkUrl,
+    createHistoryLink: createHistoryLink.mutate,
+    creatingHistoryLink: createHistoryLink.isPending,
+    resetHistoryLink: () => setHistoryLinkUrl(null),
   };
 }

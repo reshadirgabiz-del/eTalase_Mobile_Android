@@ -14,7 +14,8 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
-import { Check, ChevronDown, Search } from 'lucide-react-native';
+import { Check, ChevronDown, Globe, Search } from 'lucide-react-native';
+import { useLanguageStore, type Language } from '@/store/languageStore';
 
 export const SERIF_FONT = 'PlayfairDisplay_700Bold';
 export const SERIF_FONT_SEMI = 'PlayfairDisplay_600SemiBold';
@@ -421,6 +422,69 @@ export function StoreAvatar({
   );
 }
 
+export function LanguageToggle({
+  compact = false,
+}: {
+  compact?: boolean;
+}) {
+  const language = useLanguageStore((state) => state.language);
+  const setLanguage = useLanguageStore((state) => state.setLanguage);
+  const options: { value: Language; label: string }[] = [
+    { value: 'id', label: 'ID' },
+    { value: 'en', label: 'EN' },
+  ];
+  return (
+    <View
+      style={{
+        flexDirection: 'row',
+        backgroundColor: colors.surface,
+        borderRadius: 999,
+        borderWidth: 1,
+        borderColor: colors.line,
+        padding: 3,
+        gap: 3,
+      }}
+    >
+      {!compact ? (
+        <View style={{ paddingLeft: 8, paddingRight: 4, alignItems: 'center', justifyContent: 'center' }}>
+          <Globe size={12} color={colors.muted} />
+        </View>
+      ) : null}
+      {options.map((option) => {
+        const active = language === option.value;
+        return (
+          <Pressable
+            key={option.value}
+            onPress={() => setLanguage(option.value)}
+            style={({ pressed }) => [
+              {
+                minHeight: 26,
+                paddingHorizontal: 10,
+                borderRadius: 999,
+                alignItems: 'center',
+                justifyContent: 'center',
+                backgroundColor: active ? colors.text : 'transparent',
+                opacity: pressed ? 0.85 : 1,
+              },
+            ]}
+          >
+            <Text
+              style={{
+                fontSize: 11,
+                fontWeight: '800',
+                letterSpacing: 0.6,
+                color: active ? '#FFFFFF' : colors.text,
+              }}
+            >
+              {option.label}
+            </Text>
+          </Pressable>
+        );
+      })}
+    </View>
+  );
+}
+
 export function ToggleRow({
   title,
   description,
@@ -479,6 +543,25 @@ export function Loading() {
   return (
     <View style={styles.loading}>
       <ActivityIndicator color={colors.green} />
+    </View>
+  );
+}
+
+export function BrandedLoading() {
+  return (
+    <View style={styles.brandedLoading}>
+      <View style={styles.brandedLogoWrap}>
+        <Image source={require('../UI:UX/assets/logo.png')} style={styles.brandedLogoImage} resizeMode="contain" />
+        <View style={styles.brandedMobileBadge}>
+          <Text style={styles.brandedMobileBadgeText}>MOBILE</Text>
+        </View>
+      </View>
+      <Text style={styles.brandedLoadingText}>Loading</Text>
+      <View style={styles.brandedSkeletonStack}>
+        <Skeleton width="72%" height={14} />
+        <Skeleton width="58%" height={14} />
+        <Skeleton width="66%" height={14} />
+      </View>
     </View>
   );
 }
@@ -795,6 +878,29 @@ const styles = StyleSheet.create({
   emptyTitle: { fontSize: 16.5, fontWeight: '700', color: colors.text, textAlign: 'center' },
   emptyBody: { marginTop: 6, fontSize: 13, lineHeight: 19, color: colors.muted, textAlign: 'center' },
   loading: { paddingVertical: 36, alignItems: 'center' },
+  brandedLoading: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 36,
+    backgroundColor: colors.bg,
+  },
+  brandedLogoWrap: { width: 248, height: 76 },
+  brandedLogoImage: { width: 248, height: 76 },
+  brandedMobileBadge: {
+    position: 'absolute',
+    top: -10,
+    right: -16,
+    height: 24,
+    borderRadius: 9,
+    paddingHorizontal: 10,
+    backgroundColor: colors.text,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  brandedMobileBadgeText: { color: '#FFFFFF', fontSize: 11, fontWeight: '800', letterSpacing: 1 },
+  brandedLoadingText: { marginTop: 34, fontSize: 14, fontWeight: '700', color: colors.text },
+  brandedSkeletonStack: { width: '100%', maxWidth: 260, marginTop: 18, alignItems: 'center', gap: 10 },
   pill: { borderRadius: 999, paddingHorizontal: 9, paddingVertical: 4, flexDirection: 'row', alignItems: 'center', gap: 5 },
   pillDot: { width: 5, height: 5, borderRadius: 999 },
   pillNeutral: { backgroundColor: '#EEEAE0' },

@@ -4,6 +4,7 @@ import {
   Button,
   Card,
   EmptyState,
+  LanguageToggle,
   Screen,
   ScreenSkeleton,
   SectionLabel,
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui';
 import type { StoreAccess } from '@/lib/types';
 import { hasMobileAppAccess, planDisplayName } from '@/lib/plans';
+import { useT } from '@/lib/i18n';
 
 interface StoreSelectViewProps {
   stores?: StoreAccess[];
@@ -51,47 +53,51 @@ export function StoreSelectView({
   refreshing,
   onRefresh,
 }: StoreSelectViewProps) {
+  const t = useT();
   if (loading) return <ScreenSkeleton cards={4} />;
 
   return (
     <Screen
-      title="Pilih Toko"
-      subtitle="Selamat datang kembali"
+      title={t('storeSelect.title')}
+      subtitle={t('storeSelect.subtitle')}
       right={
-        onLogout ? (
-          <Pressable
-            onPress={onLogout}
-            style={({ pressed }) => [{
-              paddingHorizontal: 14,
-              minHeight: 32,
-              borderRadius: 999,
-              backgroundColor: '#FBE0DA',
-              alignItems: 'center',
-              justifyContent: 'center',
-              flexDirection: 'row',
-              gap: 6,
-              opacity: pressed ? 0.85 : 1,
-            }]}
-          >
-            <LogOut size={12} color={colors.red} />
-            <Text style={{ color: colors.red, fontWeight: '700', fontSize: 12 }}>Keluar</Text>
-          </Pressable>
-        ) : null
+        <View style={{ flexDirection: 'row', alignItems: 'center', gap: 8 }}>
+          <LanguageToggle compact />
+          {onLogout ? (
+            <Pressable
+              onPress={onLogout}
+              style={({ pressed }) => [{
+                paddingHorizontal: 12,
+                minHeight: 32,
+                borderRadius: 999,
+                backgroundColor: '#FBE0DA',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexDirection: 'row',
+                gap: 6,
+                opacity: pressed ? 0.85 : 1,
+              }]}
+            >
+              <LogOut size={12} color={colors.red} />
+              <Text style={{ color: colors.red, fontWeight: '700', fontSize: 12 }}>{t('storeSelect.logout')}</Text>
+            </Pressable>
+          ) : null}
+        </View>
       }
       refreshing={refreshing}
       onRefresh={onRefresh}
     >
-      <SectionLabel icon={Store}>{`${stores?.length ?? 0} Toko tersedia`}</SectionLabel>
+      <SectionLabel icon={Store}>{`${stores?.length ?? 0} ${t('storeSelect.availableSuffix')}`}</SectionLabel>
       {error ? (
         <EmptyState
           icon={Store}
-          title="Gagal memuat toko"
+          title={t('storeSelect.errorTitle')}
           body={error.message}
-          action={<Button onPress={onRetry}>Coba lagi</Button>}
+          action={<Button onPress={onRetry}>{t('common.retry')}</Button>}
         />
       ) : null}
       {!loading && stores?.length === 0 ? (
-        <EmptyState icon={Store} title="Belum ada toko" body="Akun ini belum menjadi anggota toko mana pun." />
+        <EmptyState icon={Store} title={t('storeSelect.emptyTitle')} body={t('storeSelect.emptyBody')} />
       ) : null}
       {stores?.map((store) => {
         const palette = pickAvatar(store.storeName || '?');
@@ -116,12 +122,12 @@ export function StoreSelectView({
                   <View style={{ flexDirection: 'row', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                     <StatusPill label={store.role} tone={store.role === 'owner' ? 'purple' : 'blue'} />
                     <StatusPill label={planDisplayName(store.plan)} tone={hasMobileAppAccess(store.plan) ? 'green' : 'neutral'} />
-                    <Text style={{ color: colors.muted, fontSize: 12 }}>{store.memberCount} anggota</Text>
+                    <Text style={{ color: colors.muted, fontSize: 12 }}>{store.memberCount} {t('storeSelect.membersSuffix')}</Text>
                   </View>
                 </View>
                 <View style={{ alignItems: 'flex-end', gap: 4 }}>
                   {!hasMobileAppAccess(store.plan) ? (
-                    <Text style={{ color: colors.amber, fontSize: 10, fontWeight: '700' }}>Perlu Lifetime</Text>
+                    <Text style={{ color: colors.amber, fontSize: 10, fontWeight: '700' }}>{t('storeSelect.needLifetime')}</Text>
                   ) : null}
                   <ChevronRight size={18} color={colors.subtle} />
                 </View>

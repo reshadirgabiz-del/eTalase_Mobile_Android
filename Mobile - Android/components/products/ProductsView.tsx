@@ -14,6 +14,7 @@ import {
   colors,
 } from '@/components/ui';
 import { formatIDR, type Product } from '@/lib/types';
+import { useT } from '@/lib/i18n';
 
 interface ProductsViewProps {
   search: string;
@@ -38,6 +39,7 @@ export function ProductsView({
   onAddProduct,
   onRefresh,
 }: ProductsViewProps) {
+  const t = useT();
   const [tab, setTab] = useState<'active' | 'archive'>('active');
   const [selectMode, setSelectMode] = useState(false);
 
@@ -51,11 +53,11 @@ export function ProductsView({
 
   return (
     <Screen
-      title="Produk"
-      subtitle={`${activeCount} aktif · ${total} total`}
+      title={t('products.title')}
+      subtitle={`${activeCount} ${t('products.subtitleActive')} · ${total} ${t('products.subtitleTotal')}`}
       right={
         <Button icon={Plus} size="md" onPress={onAddProduct}>
-          Tambah
+          {t('products.add')}
         </Button>
       }
       refreshing={refreshing}
@@ -65,14 +67,14 @@ export function ProductsView({
         value={tab}
         onChange={setTab}
         options={[
-          { value: 'active', label: 'Aktif', icon: Package },
-          { value: 'archive', label: 'Arsip', icon: Archive },
+          { value: 'active', label: t('products.tabActive'), icon: Package },
+          { value: 'archive', label: t('products.tabArchive'), icon: Archive },
         ]}
       />
-      <SearchField value={search} onChangeText={onSearchChange} placeholder="Cari produk atau SKU..." />
+      <SearchField value={search} onChangeText={onSearchChange} placeholder={t('products.searchPlaceholder')} />
 
       <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' }}>
-        <Text style={{ color: colors.muted, fontSize: 13 }}>Pilih beberapa produk</Text>
+        <Text style={{ color: colors.muted, fontSize: 13 }}>{t('products.multiSelectHint')}</Text>
         <Pressable
           onPress={() => setSelectMode((value) => !value)}
           style={({ pressed }) => [
@@ -90,7 +92,7 @@ export function ProductsView({
           ]}
         >
           <Text style={{ color: selectMode ? '#FFFFFF' : colors.text, fontSize: 13, fontWeight: '700' }}>
-            {selectMode ? 'Selesai' : 'Pilih'}
+            {selectMode ? t('products.doneSelect') : t('products.select')}
           </Text>
         </Pressable>
       </View>
@@ -98,12 +100,8 @@ export function ProductsView({
       {filtered.length === 0 && !loading ? (
         <EmptyState
           icon={Package}
-          title={tab === 'active' ? 'Belum ada produk' : 'Arsip kosong'}
-          body={
-            tab === 'active'
-              ? 'Produk dari dashboard web akan muncul di sini.'
-              : 'Produk yang diarsipkan akan muncul di sini.'
-          }
+          title={tab === 'active' ? t('products.emptyActive') : t('products.emptyArchive')}
+          body={tab === 'active' ? t('products.emptyActiveBody') : t('products.emptyArchiveBody')}
         />
       ) : null}
       {filtered.map((product) => (
@@ -112,6 +110,7 @@ export function ProductsView({
           product={product}
           selectMode={selectMode}
           onToggleArchive={onToggleArchive}
+          tCard={t}
         />
       ))}
     </Screen>
@@ -122,10 +121,12 @@ function ProductCard({
   product,
   selectMode,
   onToggleArchive,
+  tCard,
 }: {
   product: Product;
   selectMode: boolean;
   onToggleArchive: (input: { id: string; archived?: boolean }) => void;
+  tCard: ReturnType<typeof useT>;
 }) {
   return (
     <Link href={`/(app)/products/${product.id}` as never} asChild>
@@ -135,7 +136,7 @@ function ProductCard({
       >
         <Card style={{ padding: 0, overflow: 'hidden' }}>
           <StatusPill
-            label={product.isActive ? 'Aktif' : 'Nonaktif'}
+            label={product.isActive ? tCard('products.statusActive') : tCard('products.statusInactive')}
             tone={product.isActive ? 'green' : 'neutral'}
             pinTopRight
           />
@@ -178,7 +179,7 @@ function ProductCard({
                 </Text>
               </View>
               <View style={{ flexDirection: 'row', alignItems: 'center', gap: 6, marginTop: 8 }}>
-                <StatusPill label={`Stok ${product.stock}`} tone="amber" />
+                <StatusPill label={`${tCard('products.stockPrefix')} ${product.stock}`} tone="amber" />
                 {product.sku ? (
                   <Text numberOfLines={1} ellipsizeMode="tail" style={{ flex: 1, fontSize: 10.5, color: colors.muted }}>
                     {product.sku}
@@ -198,7 +199,7 @@ function ProductCard({
                   variant="light"
                   onPress={() => onToggleArchive({ id: product.id, archived: product.isArchived })}
                 >
-                  {product.isArchived ? 'Pulihkan' : 'Arsip'}
+                  {product.isArchived ? tCard('products.restore') : tCard('products.archive')}
                 </Button>
               ) : (
                 <ChevronRight size={18} color={colors.subtle} />

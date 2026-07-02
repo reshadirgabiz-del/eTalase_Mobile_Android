@@ -4,37 +4,23 @@ import { ArrowLeft, Globe, Info, QrCode, Smartphone, Store, UserCircle2 } from '
 import { ComponentType } from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Button, Card, InfoBanner, Screen, colors } from '@/components/ui';
+import { useT, type TranslationKey } from '@/lib/i18n';
 
-const STEPS: { icon: ComponentType<{ size?: number; color?: string }>; title: string; body: string }[] = [
-  {
-    icon: Globe,
-    title: 'Buka dasbor web',
-    body: 'Login ke akun Anda di dasbor web melalui browser komputer atau HP.',
-  },
-  {
-    icon: UserCircle2,
-    title: 'Buka Akun',
-    body: 'Di dasbor web, buka Akun, lalu pilih Pengaturan Akun.',
-  },
-  {
-    icon: Smartphone,
-    title: 'Buka Aplikasi Mobile',
-    body: 'Masuk ke bagian Aplikasi Mobile, lalu klik "Buka di Aplikasi Mobile" untuk membuat QR login dan kode.',
-  },
-  {
-    icon: QrCode,
-    title: 'Scan QR atau masukkan kode',
-    body: 'Kembali ke aplikasi ini, tap "Scan QR dari Web", lalu arahkan kamera ke QR di dasbor. Atau ketik kode 6 huruf yang tertera di bawah QR.',
-  },
-  {
-    icon: Store,
-    title: 'Pilih toko',
-    body: 'Setelah login berhasil, pilih toko yang ingin Anda kelola.',
-  },
+const STEPS: {
+  icon: ComponentType<{ size?: number; color?: string }>;
+  titleKey: TranslationKey;
+  bodyKey: TranslationKey;
+}[] = [
+  { icon: Globe, titleKey: 'howto.step1.title', bodyKey: 'howto.step1.body' },
+  { icon: UserCircle2, titleKey: 'howto.step2.title', bodyKey: 'howto.step2.body' },
+  { icon: Smartphone, titleKey: 'howto.step3.title', bodyKey: 'howto.step3.body' },
+  { icon: QrCode, titleKey: 'howto.step4.title', bodyKey: 'howto.step4.body' },
+  { icon: Store, titleKey: 'howto.step5.title', bodyKey: 'howto.step5.body' },
 ];
 
 export default function HowToLoginScreen() {
   const router = useRouter();
+  const t = useT();
 
   return (
     <Screen>
@@ -43,7 +29,7 @@ export default function HowToLoginScreen() {
           <ArrowLeft size={20} color={colors.text} />
         </Pressable>
         <Text style={{ flex: 1, textAlign: 'center', fontSize: 15.5, fontWeight: '700', color: colors.text, marginRight: 28 }}>
-          Cara Login
+          {t('howto.headerTitle')}
         </Text>
       </View>
 
@@ -59,10 +45,10 @@ export default function HowToLoginScreen() {
           <Smartphone size={28} color={colors.text} />
         </View>
         <Text style={{ marginTop: 14, fontSize: 17, fontWeight: '700', color: colors.text, textAlign: 'center' }}>
-          Cara masuk ke e-Talase Mobile
+          {t('howto.heroTitle')}
         </Text>
         <Text style={{ marginTop: 6, color: colors.muted, fontSize: 12.5, lineHeight: 18, textAlign: 'center', paddingHorizontal: 12 }}>
-          Aplikasi ini hanya bisa diakses oleh anggota toko yang sudah terdaftar di dasbor web.
+          {t('howto.heroBody')}
         </Text>
       </View>
 
@@ -71,7 +57,7 @@ export default function HowToLoginScreen() {
           const Icon = step.icon;
           const isLast = index === STEPS.length - 1;
           return (
-            <View key={step.title} style={{ flexDirection: 'row', gap: 12 }}>
+            <View key={step.titleKey} style={{ flexDirection: 'row', gap: 12 }}>
               <View style={{ alignItems: 'center' }}>
                 <View style={{
                   width: 26,
@@ -88,9 +74,9 @@ export default function HowToLoginScreen() {
               <View style={{ flex: 1, paddingBottom: isLast ? 0 : 14 }}>
                 <View style={{ flexDirection: 'row', alignItems: 'center', gap: 7 }}>
                   <Icon size={14} color={colors.text} />
-                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>{step.title}</Text>
+                  <Text style={{ fontSize: 14, fontWeight: '700', color: colors.text }}>{t(step.titleKey)}</Text>
                 </View>
-                <Text style={{ marginTop: 4, color: colors.muted, fontSize: 12, lineHeight: 17 }}>{step.body}</Text>
+                <Text style={{ marginTop: 4, color: colors.muted, fontSize: 12, lineHeight: 17 }}>{t(step.bodyKey)}</Text>
               </View>
             </View>
           );
@@ -98,7 +84,7 @@ export default function HowToLoginScreen() {
       </Card>
 
       <InfoBanner tone="info" icon={Info}>
-        QR dan kode login berlaku selama 10 menit. Jika kadaluarsa, klik "Buat kode baru" di dasbor web.
+        {t('howto.info')}
       </InfoBanner>
 
       <Button
@@ -107,12 +93,12 @@ export default function HowToLoginScreen() {
         fullWidth
         onPress={() => WebBrowser.openBrowserAsync('https://app.e-talase.com/dashboard/account')}
       >
-        Buka app.e-talase.com
+        {t('howto.openWeb')}
       </Button>
 
       <Link href="/login" asChild>
         <Pressable>
-          <Button size="lg" fullWidth>Kembali ke Halaman Login</Button>
+          <Button size="lg" fullWidth>{t('howto.backToLogin')}</Button>
         </Pressable>
       </Link>
     </Screen>

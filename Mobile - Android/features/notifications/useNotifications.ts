@@ -3,6 +3,7 @@ import { useRouter } from 'expo-router';
 import { Alert } from 'react-native';
 import { storeNotificationsApi } from '@/lib/api';
 import { useApiToken } from '@/lib/hooks';
+import { t } from '@/lib/i18n';
 import type { StoreNotification } from '@/lib/types';
 import { useAppStore } from '@/store/authStore';
 
@@ -20,9 +21,9 @@ export function useNotifications() {
     onSuccess: () => {
       notifications.refetch();
       queryClient.invalidateQueries({ queryKey: ['unread', store.storeId] });
-      Alert.alert('Berhasil', 'Semua notifikasi ditandai sudah dibaca.');
+      Alert.alert(t('common.success'), t('alert.allNotifRead'));
     },
-    onError: (error) => Alert.alert('Gagal', (error as Error).message),
+    onError: (error) => Alert.alert(t('common.failed'), (error as Error).message),
   });
 
   const openNotification = (item: StoreNotification) => {
@@ -42,7 +43,7 @@ export function useNotifications() {
       router.push('/(app)/order-links' as never);
       return;
     }
-    Alert.alert('Notifikasi', 'Tidak ada item terkait untuk notifikasi ini.');
+    Alert.alert(t('alert.notifTitle'), t('alert.notifNoRelated'));
   };
 
   return {

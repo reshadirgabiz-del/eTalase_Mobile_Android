@@ -5,7 +5,6 @@ import {
   CheckCircle2,
   ChevronRight,
   Crown,
-  Gift,
   Globe,
   Inbox,
   Link2,
@@ -22,6 +21,7 @@ import { Pressable, Text, View } from 'react-native';
 import {
   Button,
   Card,
+  LanguageToggle,
   Screen,
   SectionLabel,
   StatusPill,
@@ -31,6 +31,7 @@ import {
 } from '@/components/ui';
 import type { StoreAccess } from '@/lib/types';
 import { planDisplayName } from '@/lib/plans';
+import { useT, type TranslationKey } from '@/lib/i18n';
 
 interface ProfileViewProps {
   store: StoreAccess;
@@ -39,22 +40,21 @@ interface ProfileViewProps {
   onSwitchStore: () => void;
   onLogout: () => void;
   onOpenStorefront: () => void;
-  onOpenCredits: () => void;
   onOpenPlan: () => void;
   onOpenAccountSettings: () => void;
   onSavePreferences: () => void;
   onEnableDevice: () => void;
 }
 
-const ACCESS_ITEMS: { label: string; icon: ComponentType<{ size?: number; color?: string }> }[] = [
-  { label: 'Lihat Semua Pesanan', icon: Inbox },
-  { label: 'Upload Foto Bukti Pengiriman', icon: Camera },
-  { label: 'Tandai Pesanan Diterima', icon: CheckCircle2 },
-  { label: 'Kelola Status Pesanan Lengkap', icon: ArrowLeftRight },
-  { label: 'Arsipkan & Pulihkan Pesanan', icon: Inbox },
-  { label: 'Buat & Kelola Pengiriman', icon: Plane },
-  { label: 'Kelola Produk & Stok', icon: Package },
-  { label: 'Kelola Link Pesanan', icon: Link2 },
+const ACCESS_ITEMS: { key: TranslationKey; icon: ComponentType<{ size?: number; color?: string }> }[] = [
+  { key: 'profile.access.viewAll', icon: Inbox },
+  { key: 'profile.access.uploadProof', icon: Camera },
+  { key: 'profile.access.markReceived', icon: CheckCircle2 },
+  { key: 'profile.access.manageStatus', icon: ArrowLeftRight },
+  { key: 'profile.access.archive', icon: Inbox },
+  { key: 'profile.access.shipments', icon: Plane },
+  { key: 'profile.access.products', icon: Package },
+  { key: 'profile.access.links', icon: Link2 },
 ];
 
 export function ProfileView({
@@ -64,12 +64,12 @@ export function ProfileView({
   onSwitchStore,
   onLogout,
   onOpenStorefront,
-  onOpenCredits,
   onOpenPlan,
   onOpenAccountSettings,
   onSavePreferences,
   onEnableDevice,
 }: ProfileViewProps) {
+  const t = useT();
   const [statusNotif, setStatusNotif] = useState(true);
   const [proofNotif, setProofNotif] = useState(true);
   const [stockNotif, setStockNotif] = useState(true);
@@ -78,7 +78,7 @@ export function ProfileView({
 
   return (
     <Screen
-      title="Profil"
+      title={t('profile.title')}
       right={
         <Pressable onPress={onOpenAccountSettings} hitSlop={10}>
           <Settings size={20} color={colors.text} />
@@ -112,53 +112,14 @@ export function ProfileView({
             <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 18 }}>{initial}</Text>
           </View>
           <View style={{ flex: 1 }}>
-            <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '700' }}>{userName || 'Pengguna'}</Text>
+            <Text style={{ color: '#FFFFFF', fontSize: 15, fontWeight: '700' }}>{userName || t('profile.userFallback')}</Text>
             <Text style={{ color: '#B7B1A2', marginTop: 2, fontSize: 12 }}>{userEmail}</Text>
           </View>
         </View>
       </View>
 
-      <View style={{
-        flexDirection: 'row',
-        alignItems: 'center',
-        gap: 10,
-        padding: 12,
-        borderRadius: 14,
-        backgroundColor: '#FFF6E1',
-        borderWidth: 1,
-        borderColor: '#F1D77A',
-      }}>
-        <View style={{
-          width: 36,
-          height: 36,
-          borderRadius: 10,
-          backgroundColor: '#FFC107',
-          alignItems: 'center',
-          justifyContent: 'center',
-        }}>
-          <Gift size={18} color="#FFFFFF" />
-        </View>
-        <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#8A6B12' }}>Klaim Rp25.000 credit gratis</Text>
-          <Text style={{ marginTop: 2, color: '#8A6B12', fontSize: 11, lineHeight: 15 }}>
-            Jawab kuesioner singkat onboarding untuk kickstart toko kamu.
-          </Text>
-        </View>
-        <Pressable onPress={onOpenCredits} style={({ pressed }) => [{
-          paddingHorizontal: 12,
-          minHeight: 32,
-          borderRadius: 9,
-          backgroundColor: '#FFB300',
-          alignItems: 'center',
-          justifyContent: 'center',
-          opacity: pressed ? 0.85 : 1,
-        }]}>
-          <Text style={{ color: '#FFFFFF', fontWeight: '800', fontSize: 12 }}>Klaim</Text>
-        </Pressable>
-      </View>
-
       <Card>
-        <SectionLabel icon={Store}>Toko Aktif</SectionLabel>
+        <SectionLabel icon={Store}>{t('profile.activeStore')}</SectionLabel>
         <View style={{ flexDirection: 'row', alignItems: 'center', gap: 12 }}>
           <StoreAvatar
             name={store.storeName}
@@ -179,24 +140,36 @@ export function ProfileView({
         <View style={{ flexDirection: 'row', gap: 10, marginTop: 14 }}>
           <View style={{ flex: 1 }}>
             <Button variant="light" icon={Globe} onPress={onOpenStorefront} fullWidth>
-              Lihat Toko
+              {t('profile.viewStore')}
             </Button>
           </View>
           <View style={{ flex: 1 }}>
             <Button variant="light" icon={ArrowLeftRight} onPress={onSwitchStore} fullWidth>
-              Ganti Toko
+              {t('profile.switchStore')}
             </Button>
           </View>
         </View>
       </Card>
 
       <Card>
-        <SectionLabel icon={ShieldCheck}>Akses Anda</SectionLabel>
+        <SectionLabel icon={Globe}>{t('profile.languageSection')}</SectionLabel>
+        <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+          <View style={{ flex: 1 }}>
+            <Text style={{ fontSize: 13, color: colors.muted, lineHeight: 18 }}>
+              {t('profile.languageDesc')}
+            </Text>
+          </View>
+          <LanguageToggle />
+        </View>
+      </Card>
+
+      <Card>
+        <SectionLabel icon={ShieldCheck}>{t('profile.accessTitle')}</SectionLabel>
         <View style={{ gap: 4 }}>
-          {ACCESS_ITEMS.map(({ label, icon: Icon }) => (
-            <View key={label} style={{ flexDirection: 'row', alignItems: 'center', gap: 9, paddingVertical: 8 }}>
+          {ACCESS_ITEMS.map(({ key, icon: Icon }) => (
+            <View key={key} style={{ flexDirection: 'row', alignItems: 'center', gap: 9, paddingVertical: 8 }}>
               <Icon size={14} color={colors.muted} />
-              <Text style={{ flex: 1, fontSize: 12.5, color: colors.text }}>{label}</Text>
+              <Text style={{ flex: 1, fontSize: 12.5, color: colors.text }}>{t(key)}</Text>
               <View style={{
                 width: 18,
                 height: 18,
@@ -213,30 +186,30 @@ export function ProfileView({
       </Card>
 
       <Card>
-        <SectionLabel icon={Bell}>Notifikasi Push</SectionLabel>
+        <SectionLabel icon={Bell}>{t('profile.notifPush')}</SectionLabel>
         <ToggleRow
-          title="Status Pesanan"
-          description="Perubahan status pesanan"
+          title={t('profile.notifStatus')}
+          description={t('profile.notifStatusDesc')}
           value={statusNotif}
           onValueChange={setStatusNotif}
         />
         <View style={{ height: 1, backgroundColor: colors.line }} />
         <ToggleRow
-          title="Bukti Transfer"
-          description="Upload bukti pembayaran"
+          title={t('profile.notifProof')}
+          description={t('profile.notifProofDesc')}
           value={proofNotif}
           onValueChange={setProofNotif}
         />
         <View style={{ height: 1, backgroundColor: colors.line }} />
         <ToggleRow
-          title="Stok Menipis"
-          description="Stok produk ≤ 5 atau habis"
+          title={t('profile.notifStock')}
+          description={t('profile.notifStockDesc')}
           value={stockNotif}
           onValueChange={setStockNotif}
         />
         <View style={{ marginTop: 14, gap: 10 }}>
-          <Button variant="blue" onPress={onSavePreferences}>Simpan Preferensi</Button>
-          <Button variant="light" icon={Smartphone} onPress={onEnableDevice}>Aktifkan di Perangkat Ini</Button>
+          <Button variant="blue" onPress={onSavePreferences}>{t('profile.savePrefs')}</Button>
+          <Button variant="light" icon={Smartphone} onPress={onEnableDevice}>{t('profile.enableDevice')}</Button>
         </View>
       </Card>
 
@@ -262,8 +235,8 @@ export function ProfileView({
           <Crown size={18} color="#B07A00" />
         </View>
         <View style={{ flex: 1 }}>
-          <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#8A6B12' }}>Paket Lifetime</Text>
-          <Text style={{ marginTop: 2, color: '#8A6B12', fontSize: 11 }}>Kelola paket untuk toko ini</Text>
+          <Text style={{ fontSize: 12.5, fontWeight: '800', color: '#8A6B12' }}>{t('profile.lifetimeTitle')}</Text>
+          <Text style={{ marginTop: 2, color: '#8A6B12', fontSize: 11 }}>{t('profile.lifetimeDesc')}</Text>
         </View>
         <View style={{
           width: 26,
@@ -293,7 +266,7 @@ export function ProfileView({
         }]}
       >
         <LogOut size={14} color={colors.red} />
-        <Text style={{ color: colors.red, fontWeight: '700', fontSize: 13 }}>Keluar dari Akun</Text>
+        <Text style={{ color: colors.red, fontWeight: '700', fontSize: 13 }}>{t('profile.logout')}</Text>
       </Pressable>
     </Screen>
   );

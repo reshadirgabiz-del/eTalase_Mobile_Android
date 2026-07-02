@@ -139,7 +139,7 @@ export default function LabelPage() {
         <Stack gap="xs">
           <Text fw={600} size="sm">Courier Logos</Text>
           <Text size="xs" c="dimmed">
-            Courier logos are read directly from <code>Backend/assets/couriers/</code>. To update a courier logo, replace the corresponding file (e.g. <code>jne.png</code>, <code>sicepat.png</code>) and restart the backend.
+            Courier logos are read directly from <code>Backend/assets/couriers_new/</code>. To update a courier logo, replace the corresponding file (for example <code>jne.svg</code> or <code>jnt.png</code>) and restart the backend.
           </Text>
           <Text size="xs" c="dimmed">
             Supported couriers: anteraja, borzo, deliveree, gojek, grab, idexpress, jdl, jne, jnt, lalamove, lion, ninja, paxel, pos, rpx, sap, sentralcargo, sicepat, tiki, wahana.

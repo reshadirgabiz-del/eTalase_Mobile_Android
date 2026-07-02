@@ -17,6 +17,7 @@ import {
 } from '@/components/ui';
 import { formatDate, formatIDR, type Order, type OrderStatus, shortId } from '@/lib/types';
 import { orderStatusTone } from '@/features/orders/useOrders';
+import { useT, type TranslationKey } from '@/lib/i18n';
 
 interface OrdersViewProps {
   orders?: Order[];
@@ -29,13 +30,13 @@ interface OrdersViewProps {
   onRefresh?: () => void;
 }
 
-const STATUS_LABEL: Record<OrderStatus, string> = {
-  pending: 'Menunggu',
-  paid: 'Dibayar',
-  processing: 'Diproses',
-  shipped: 'Dikirim',
-  delivered: 'Diterima',
-  cancelled: 'Dibatalkan',
+const STATUS_LABEL_KEYS: Record<OrderStatus, TranslationKey> = {
+  pending: 'orders.status.pending',
+  paid: 'orders.status.paid',
+  processing: 'orders.status.processing',
+  shipped: 'orders.status.shipped',
+  delivered: 'orders.status.delivered',
+  cancelled: 'orders.status.cancelled',
 };
 
 const STATUS_DOT: Record<OrderStatus, string> = {
@@ -47,20 +48,21 @@ const STATUS_DOT: Record<OrderStatus, string> = {
   cancelled: '#D64531',
 };
 
-const FILTER_OPTIONS: { value: 'all' | OrderStatus; label: string; dotColor: string }[] = [
-  { value: 'all', label: 'Semua', dotColor: colors.text },
-  { value: 'pending', label: 'Menunggu', dotColor: STATUS_DOT.pending },
-  { value: 'paid', label: 'Dibayar', dotColor: STATUS_DOT.paid },
-  { value: 'processing', label: 'Diproses', dotColor: STATUS_DOT.processing },
-  { value: 'shipped', label: 'Dikirim', dotColor: STATUS_DOT.shipped },
-  { value: 'delivered', label: 'Diterima', dotColor: STATUS_DOT.delivered },
-  { value: 'cancelled', label: 'Dibatalkan', dotColor: STATUS_DOT.cancelled },
-];
-
 export function OrdersView({ orders, total, loading, error, unreadCount, refreshing, onRetry, onRefresh }: OrdersViewProps) {
+  const t = useT();
   const [tab, setTab] = useState<'active' | 'archive'>('active');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | OrderStatus>('all');
+
+  const FILTER_OPTIONS: { value: 'all' | OrderStatus; label: string; dotColor: string }[] = [
+    { value: 'all', label: t('orders.filter.all'), dotColor: colors.text },
+    { value: 'pending', label: t('orders.status.pending'), dotColor: STATUS_DOT.pending },
+    { value: 'paid', label: t('orders.status.paid'), dotColor: STATUS_DOT.paid },
+    { value: 'processing', label: t('orders.status.processing'), dotColor: STATUS_DOT.processing },
+    { value: 'shipped', label: t('orders.status.shipped'), dotColor: STATUS_DOT.shipped },
+    { value: 'delivered', label: t('orders.status.delivered'), dotColor: STATUS_DOT.delivered },
+    { value: 'cancelled', label: t('orders.status.cancelled'), dotColor: STATUS_DOT.cancelled },
+  ];
 
   const filtered = useMemo(() => {
     if (!orders) return [];
@@ -80,8 +82,8 @@ export function OrdersView({ orders, total, loading, error, unreadCount, refresh
 
   return (
     <Screen
-      title="Pesanan"
-      subtitle={`${total} pesanan`}
+      title={t('orders.title')}
+      subtitle={`${total} ${t('orders.subtitleSuffix')}`}
       right={
         <View style={{ flexDirection: 'row', alignItems: 'flex-end', gap: 8 }}>
           <Link href={'/(app)/notifications' as never} asChild>
@@ -129,34 +131,30 @@ export function OrdersView({ orders, total, loading, error, unreadCount, refresh
         value={tab}
         onChange={setTab}
         options={[
-          { value: 'active', label: 'Aktif', icon: Inbox },
-          { value: 'archive', label: 'Arsip', icon: Archive },
+          { value: 'active', label: t('orders.tabActive'), icon: Inbox },
+          { value: 'archive', label: t('orders.tabArchive'), icon: Archive },
         ]}
       />
-      <SearchField value={search} onChangeText={setSearch} placeholder="Cari penerima atau produk..." />
+      <SearchField value={search} onChangeText={setSearch} placeholder={t('orders.searchPlaceholder')} />
 
       {error ? (
-        <EmptyState title="Gagal memuat pesanan" body={error.message} action={<Button onPress={onRetry}>Coba lagi</Button>} />
+        <EmptyState title={t('orders.errorTitle')} body={error.message} action={<Button onPress={onRetry}>{t('common.retry')}</Button>} />
       ) : null}
       {!loading && !error && filtered.length === 0 ? (
         <EmptyState
           icon={Inbox}
-          title={tab === 'active' ? 'Belum ada pesanan' : 'Arsip kosong'}
-          body={
-            tab === 'active'
-              ? 'Pesanan baru dari storefront akan muncul di sini.'
-              : 'Pesanan yang diarsipkan akan muncul di sini.'
-          }
+          title={tab === 'active' ? t('orders.emptyActive') : t('orders.emptyArchive')}
+          body={tab === 'active' ? t('orders.emptyActiveBody') : t('orders.emptyArchiveBody')}
         />
       ) : null}
       {filtered.map((order) => (
-        <OrderCard key={order.id} order={order} />
+        <OrderCard key={order.id} order={order} tCard={t} />
       ))}
     </Screen>
   );
 }
 
-function OrderCard({ order }: { order: Order }) {
+function OrderCard({ order, tCard }: { order: Order; tCard: ReturnType<typeof useT> }) {
   const tone = orderStatusTone(order.status as OrderStatus);
   const accent = toneAccent[tone];
   const priceColor =
@@ -176,7 +174,7 @@ function OrderCard({ order }: { order: Order }) {
     <Link href={`/(app)/orders/${order.id}` as never} asChild>
       <Pressable>
         <Card accent={accent}>
-          <StatusPill label={STATUS_LABEL[order.status] ?? order.status} tone={tone} pinTopRight />
+          <StatusPill label={tCard(STATUS_LABEL_KEYS[order.status])} tone={tone} pinTopRight />
           <View style={{ paddingRight: 92 }}>
             <Text style={{ color: '#9B9486', fontWeight: '700', fontSize: 11, letterSpacing: 0.4 }}>{shortId(order.id)}</Text>
           </View>
@@ -188,19 +186,19 @@ function OrderCard({ order }: { order: Order }) {
             {order.address.city}
           </Text>
           <Text style={{ marginTop: 5, color: '#5E574C', fontSize: 12 }}>
-            {order.items.length} item · {courier || '-'}
+            {order.items.length} {tCard('orders.itemsSuffix')} · {courier || '-'}
           </Text>
           <View style={{ marginTop: 10, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end' }}>
             <View style={{ flex: 1 }}>
               <Text style={{ color: priceColor, fontWeight: '800', fontSize: 15 }}>{formatIDR(order.total)}</Text>
               <Text style={{ marginTop: 2, color: colors.muted, fontSize: 11 }}>
-                Ongkir {formatIDR(order.deliveryFee)}
+                {tCard('orders.shippingPrefix')} {formatIDR(order.deliveryFee)}
               </Text>
             </View>
             <View style={{ alignItems: 'flex-end' }}>
               <Text style={{ color: colors.muted, fontSize: 11 }}>{formatDate(order.createdAt)}</Text>
               <Text style={{ color: colors.subtle, fontSize: 10.5, marginTop: 2 }}>
-                Diperbarui {formatDate(order.updatedAt)}
+                {tCard('orders.updatedPrefix')} {formatDate(order.updatedAt)}
               </Text>
             </View>
           </View>

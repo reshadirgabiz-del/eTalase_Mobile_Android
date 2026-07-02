@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Alert } from 'react-native';
 import { FRONTEND_BASE, productsApi } from '@/lib/api';
 import { useApiToken } from '@/lib/hooks';
+import { t } from '@/lib/i18n';
 import { useAppStore } from '@/store/authStore';
 
 export function useProducts() {
@@ -35,9 +36,9 @@ export function useProducts() {
     },
     onSuccess: (_updated, variables) => {
       products.refetch();
-      Alert.alert('Berhasil', variables.archived ? 'Produk dipulihkan.' : 'Produk diarsipkan.');
+      Alert.alert(t('common.success'), variables.archived ? t('alert.productRestored') : t('alert.productArchived'));
     },
-    onError: (error) => Alert.alert('Gagal mengubah produk', (error as Error).message),
+    onError: (error) => Alert.alert(t('alert.productToggleFailed'), (error as Error).message),
   });
 
   const filteredProducts = products.data?.data.filter((product) =>

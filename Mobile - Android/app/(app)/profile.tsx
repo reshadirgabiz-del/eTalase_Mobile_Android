@@ -11,7 +11,6 @@ export default function ProfileScreen() {
       userEmail={profile.userEmail}
       onSwitchStore={profile.switchStore}
       onOpenStorefront={profile.openStorefront}
-      onOpenCredits={profile.openCredits}
       onOpenPlan={profile.openPlan}
       onOpenAccountSettings={profile.openAccountSettings}
       onSavePreferences={profile.savePreferences}

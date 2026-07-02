@@ -5,6 +5,7 @@ import { useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { mobileAuthApi } from '@/lib/api';
+import { t } from '@/lib/i18n';
 
 export function getTicketFromLoginPayload(data: string) {
   const candidates = [data];
@@ -53,11 +54,11 @@ export function useMobileLogin() {
     setLoading(true);
     try {
       const result = await signIn.create({ strategy: 'ticket', ticket });
-      if (!result.createdSessionId) throw new Error('Ticket login tidak menghasilkan sesi.');
+      if (!result.createdSessionId) throw new Error(t('alert.loginTicketFailed'));
       await setActive({ session: result.createdSessionId });
       router.replace('/store-select' as never);
     } catch (error) {
-      Alert.alert('Login gagal', (error as Error).message);
+      Alert.alert(t('alert.loginFailedTitle'), (error as Error).message);
       redeemingRef.current = false;
     } finally {
       setLoading(false);
@@ -86,7 +87,7 @@ export function useMobileLogin() {
       const { ticket } = await mobileAuthApi.exchangeCode(trimmed);
       await redeemTicket(ticket);
     } catch (error) {
-      Alert.alert('Kode tidak valid', (error as Error).message);
+      Alert.alert(t('alert.codeInvalidTitle'), (error as Error).message);
       setLoading(false);
       redeemingRef.current = false;
     }
@@ -96,7 +97,7 @@ export function useMobileLogin() {
     if (!permission?.granted) {
       const res = await requestPermission();
       if (!res.granted) {
-        Alert.alert('Izin kamera diperlukan', 'Aktifkan kamera untuk scan QR login dari web.');
+        Alert.alert(t('alert.cameraPermissionTitle'), t('alert.cameraPermissionBody'));
         return;
       }
     }

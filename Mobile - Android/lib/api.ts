@@ -1,4 +1,5 @@
 import type {
+  CustomerWithHistory,
   Order,
   OrderAttachment,
   OrderLink,
@@ -89,6 +90,9 @@ export const ordersApi = {
 
   get: (id: string, storeId: string, token: string) =>
     request<Order>(`/orders/${id}?storeId=${storeId}`, {}, token),
+
+  listCustomersWithHistory: (storeId: string, token: string) =>
+    request<CustomerWithHistory[]>(`/orders/customers-with-history?storeId=${storeId}`, {}, token),
 
   updateStatus: (id: string, storeId: string, status: OrderStatus, token: string) =>
     request<Order>(
@@ -250,7 +254,12 @@ export const orderLinksApi = {
     storeId: string,
     items: { productId: string; quantity: number }[],
     token: string,
-    options?: { message?: string; isPermanent?: boolean },
+    options?: {
+      message?: string;
+      isPermanent?: boolean;
+      linkType?: 'preset' | 'history';
+      customerLabel?: string;
+    },
   ) =>
     request<OrderLink>(
       `/order-links?storeId=${storeId}`,
@@ -260,6 +269,13 @@ export const orderLinksApi = {
 
   remove: (id: string, storeId: string, token: string) =>
     request<{ success: boolean }>(`/order-links/${id}?storeId=${storeId}`, { method: 'DELETE' }, token),
+
+  assignOrder: (id: string, orderId: string, storeId: string, token: string) =>
+    request<{ success: boolean; linkId: string; orderId: string }>(
+      `/order-links/${id}/assign-order?storeId=${storeId}`,
+      { method: 'PATCH', ...body({ orderId }) },
+      token,
+    ),
 };
 
 export const storeNotificationsApi = {
@@ -271,6 +287,25 @@ export const storeNotificationsApi = {
 
   markAllRead: (storeId: string, token: string) =>
     request<{ success: boolean }>(`/store-notifications/read-all?storeId=${storeId}`, { method: 'PATCH' }, token),
+};
+
+export const pushNotificationsApi = {
+  registerToken: (
+    data: { token: string; storeId: string; deviceLabel?: string; platform?: string },
+    authToken: string,
+  ) =>
+    request<{ ok?: boolean; success?: boolean }>(
+      '/notifications/token',
+      { method: 'POST', ...body(data as unknown as Json) },
+      authToken,
+    ),
+
+  unregisterToken: (token: string, authToken: string, storeId?: string | null) =>
+    request<{ ok?: boolean; success?: boolean }>(
+      '/notifications/token',
+      { method: 'DELETE', ...body({ token, storeId: storeId ?? undefined } as Json) },
+      authToken,
+    ),
 };
 
 export const profileApi = {
